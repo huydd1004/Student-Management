@@ -1,0 +1,84 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isActiveAdmin(classId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)).data.status == 'active'
+        && get(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function validStudentStatus() {
+      return request.resource.data.status in ['active', 'transferred', 'inactive'];
+    }
+
+    function validAttendancePeriod() {
+      return request.resource.data.period in ['morning', 'afternoon'];
+    }
+
+    function validAttendanceStatus() {
+      return request.resource.data.status in [
+        'present',
+        'absent_excused',
+        'absent_unexcused',
+        'late'
+      ];
+    }
+
+    match /classes/{classId} {
+      allow read: if isActiveAdmin(classId);
+      allow create: if false;
+      allow update: if isActiveAdmin(classId);
+      allow delete: if false;
+
+      match /members/{memberId} {
+        allow read, create, update: if isActiveAdmin(classId);
+        allow delete: if false;
+      }
+
+      match /subjects/{subjectId} {
+        allow read, create, update: if isActiveAdmin(classId);
+        allow delete: if false;
+      }
+
+      match /students/{studentId} {
+        allow read: if isActiveAdmin(classId);
+        allow create, update: if isActiveAdmin(classId) && validStudentStatus();
+        allow delete: if false;
+      }
+
+      match /attendanceSessions/{sessionId} {
+        allow read: if isActiveAdmin(classId);
+        allow create, update: if isActiveAdmin(classId) && validAttendancePeriod();
+        allow delete: if false;
+
+        match /records/{studentId} {
+          allow read: if isActiveAdmin(classId);
+          allow create, update: if isActiveAdmin(classId) && validAttendanceStatus();
+          allow delete: if false;
+        }
+      }
+
+      match /lessonCheckCalls/{callId} {
+        allow read, create, update: if isActiveAdmin(classId);
+        allow delete: if false;
+      }
+
+      match /activityLogs/{logId} {
+        allow read: if isActiveAdmin(classId);
+        allow create: if isActiveAdmin(classId)
+          && request.resource.data.actorId == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
