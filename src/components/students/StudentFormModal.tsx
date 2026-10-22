@@ -188,7 +188,7 @@ export function StudentFormModal({
                   name="group"
                   type="text"
                   defaultValue={initialValues.group ?? ''}
-                  placeholder="Ví dụ: Tổ 1"
+                  placeholder="Ví dụ: 1"
                   className={inputClassName}
                 />
               </label>

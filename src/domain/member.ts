@@ -1,6 +1,9 @@
 import type { AuditFields } from './common';
 
-/** Hai người dùng ban đầu đều là admin và có quyền ngang nhau. */
+/**
+ * Đây là quyền truy cập ứng dụng, không phải chức danh công việc.
+ * Hai thành viên đều có quyền thao tác ngang nhau.
+ */
 export type ClassMemberRole = 'admin';
 export type ClassMemberStatus = 'active' | 'disabled';
 

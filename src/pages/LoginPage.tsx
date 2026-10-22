@@ -121,7 +121,7 @@ export function LoginPage() {
         )}
 
         <p className="mt-6 text-center text-xs leading-5 text-slate-400">
-          Hệ thống nội bộ dành cho giáo viên quản lý lớp học.
+          Hệ thống nội bộ dành cho quản trị viên hệ thống và giáo viên chủ nhiệm.
         </p>
       </section>
     </main>

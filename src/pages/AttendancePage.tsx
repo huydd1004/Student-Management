@@ -420,8 +420,8 @@ export function AttendancePage() {
         </p>
       </section>
 
-      <section className="mt-8 grid gap-5 rounded-3xl border border-pink-100 bg-white p-5 shadow-sm md:grid-cols-2 md:p-6">
-        <div>
+      <section className="mt-8 grid min-w-0 gap-5 overflow-hidden rounded-3xl border border-pink-100 bg-white p-5 shadow-sm md:grid-cols-2 md:p-6">
+        <div className="min-w-0">
           <label
             htmlFor="attendance-date"
             className="text-sm font-semibold text-slate-700"
@@ -429,7 +429,7 @@ export function AttendancePage() {
             Ngày điểm danh
           </label>
 
-          <div className="relative mt-2">
+          <div className="relative mt-2 min-w-0 max-w-full overflow-hidden">
             <CalendarDays
               aria-hidden="true"
               size={19}
@@ -445,17 +445,17 @@ export function AttendancePage() {
               onChange={(event) =>
                 setAttendanceDate(event.target.value)
               }
-              className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-medium text-slate-800 outline-none transition focus:border-lotus-400 focus:ring-4 focus:ring-pink-100"
+              className="block h-12 w-full min-w-0 max-w-full rounded-xl border border-slate-200 bg-white pl-11 pr-3 text-sm font-medium text-slate-800 outline-none transition focus:border-lotus-400 focus:ring-4 focus:ring-pink-100"
             />
           </div>
         </div>
 
-        <fieldset>
+        <fieldset className="min-w-0">
           <legend className="text-sm font-semibold text-slate-700">
             Buổi học
           </legend>
 
-          <div className="mt-2 grid grid-cols-2 gap-3">
+          <div className="mt-2 grid min-w-0 grid-cols-2 gap-3">
             {periodOptions.map(
               ({ value, label, icon: Icon }) => {
                 const isSelected = period === value
@@ -466,7 +466,7 @@ export function AttendancePage() {
                     type="button"
                     onClick={() => setPeriod(value)}
                     aria-pressed={isSelected}
-                    className={`flex h-12 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition ${
+                    className={`flex h-12 min-w-0 items-center justify-center gap-2 rounded-xl border px-2 text-sm font-semibold transition sm:px-4 ${
                       isSelected
                         ? 'border-lotus-600 bg-lotus-600 text-white shadow-sm'
                         : 'border-slate-200 bg-white text-slate-600 hover:border-pink-300 hover:bg-lotus-50'

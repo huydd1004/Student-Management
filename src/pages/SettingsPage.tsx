@@ -13,7 +13,10 @@ import {
 
 import { useAuth } from '../auth/AuthProvider'
 import { ThemeToggle } from '../components/theme/ThemeToggle'
-import { CLASSROOM_CONFIG } from '../config/classroom'
+import {
+  CLASSROOM_CONFIG,
+  CLASS_MEMBER_TITLES,
+} from '../config/classroom'
 import {
   subscribeToMembers,
   type ClassMemberListItem,
@@ -130,7 +133,7 @@ export function SettingsPage() {
               <Users size={22} />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900">Thành viên quản trị</h3>
+              <h3 className="font-bold text-slate-900">Thành viên quản lý</h3>
               <p className="text-sm text-slate-500">
                 {members.filter((member) => member.status === 'active').length} tài khoản đang hoạt động
               </p>
@@ -152,7 +155,9 @@ export function SettingsPage() {
                       {member.displayName}
                       {member.id === user?.uid ? ' (Bạn)' : ''}
                     </p>
-                    <p className="text-xs text-slate-500">Quản trị viên</p>
+                    <p className="text-xs text-slate-500">
+                      {CLASS_MEMBER_TITLES[member.id] ?? 'Thành viên quản lý'}
+                    </p>
                   </div>
                 </div>
                 <span
@@ -170,7 +175,8 @@ export function SettingsPage() {
 
           <div className="mt-4 flex items-start gap-3 rounded-2xl bg-lotus-50 p-4 text-sm text-lotus-700">
             <ShieldCheck className="mt-0.5 shrink-0" size={19} />
-            Hai thành viên có quyền ngang nhau trong việc quản lý lớp và dữ liệu.
+            Bạn quản lý hệ thống và toàn bộ mã nguồn; Lê Bảo Anh là giáo viên
+            chủ nhiệm. Hai tài khoản vẫn có quyền thao tác ngang nhau trong ứng dụng.
           </div>
         </section>
 

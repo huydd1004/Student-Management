@@ -50,6 +50,11 @@ textarea {
   font: inherit;
 }
 
+input[type="date"] {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .theme-toggle {
   border-color: #e2e8f0;
   background: #ffffff;
@@ -64,7 +69,7 @@ textarea {
 
 /*
  * Lớp tương thích màu tối cho các màn hình đã có. Các màu trạng thái vẫn
- * được giữ riêng để giáo viên nhận biết nhanh học sinh vắng, đi muộn và
+ * được giữ riêng để người dùng nhận biết nhanh học sinh vắng, đi muộn và
  * tình trạng hồ sơ.
  */
 html.dark,

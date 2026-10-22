@@ -12,7 +12,10 @@ import {
 import { useState } from 'react'
 import { NavLink } from 'react-router'
 import { useAuth } from '../../auth/AuthProvider'
-import { CLASSROOM_CONFIG } from '../../config/classroom'
+import {
+  CLASSROOM_CONFIG,
+  CLASS_MEMBER_TITLES,
+} from '../../config/classroom'
 import { ThemeToggle } from '../theme/ThemeToggle'
 
 type AppSidebarProps = {
@@ -147,6 +150,11 @@ export function AppSidebar({
             <div className="min-w-0 px-1 pb-3">
               <p className="truncate text-sm font-semibold text-slate-900">
                 {user?.displayName || 'Thành viên lớp'}
+              </p>
+              <p className="mt-0.5 truncate text-xs text-slate-500">
+                {user
+                  ? CLASS_MEMBER_TITLES[user.uid] ?? 'Thành viên quản lý'
+                  : 'Thành viên quản lý'}
               </p>
             </div>
 

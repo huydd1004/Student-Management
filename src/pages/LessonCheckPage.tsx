@@ -72,6 +72,19 @@ function formatCallTime(call: LessonCheckCallListItem) {
   }).format(new Date(call.calledAt.seconds * 1000))
 }
 
+function normalizeGroupName(value?: string) {
+  return (value ?? '')
+    .trim()
+    .replace(/^(tổ|to)\s*/i, '')
+    .trim()
+}
+
+function formatGroupName(value?: string) {
+  const normalizedGroup = normalizeGroupName(value)
+
+  return normalizedGroup ? `Tổ ${normalizedGroup}` : ''
+}
+
 export function LessonCheckPage() {
   const { user } = useAuth()
   const [students, setStudents] = useState<StudentListItem[]>([])
@@ -135,7 +148,7 @@ export function LessonCheckPage() {
       Array.from(
         new Set(
           activeStudents
-            .map((student) => student.group?.trim())
+            .map((student) => normalizeGroupName(student.group))
             .filter((value): value is string => Boolean(value)),
         ),
       ).sort((first, second) => first.localeCompare(second, 'vi')),
@@ -144,7 +157,9 @@ export function LessonCheckPage() {
   const eligibleStudents = useMemo(
     () =>
       activeStudents.filter(
-        (student) => group === 'all' || student.group === group,
+        (student) =>
+          group === 'all' ||
+          normalizeGroupName(student.group) === group,
       ),
     [activeStudents, group],
   )
@@ -273,7 +288,7 @@ export function LessonCheckPage() {
                 <option value="all">Cả lớp ({activeStudents.length})</option>
                 {groups.map((groupName) => (
                   <option key={groupName} value={groupName}>
-                    Tổ {groupName}
+                    {formatGroupName(groupName)}
                   </option>
                 ))}
               </select>
@@ -297,7 +312,7 @@ export function LessonCheckPage() {
                 <p className="mt-2 text-sm text-slate-600">
                   {currentStudent.studentCode}
                   {currentStudent.group
-                    ? ` · Tổ ${currentStudent.group}`
+                    ? ` · ${formatGroupName(currentStudent.group)}`
                     : ''}
                 </p>
               </>
@@ -449,8 +464,8 @@ export function LessonCheckPage() {
           <div className="mt-5 flex items-start gap-3 rounded-2xl bg-lotus-50 p-4 text-sm text-lotus-700">
             <BookOpenCheck className="mt-0.5 shrink-0" size={19} />
             <p>
-              Lịch sử giúp hai giáo viên tránh gọi lặp lại và theo dõi học sinh
-              đang cần hỗ trợ.
+              Lịch sử giúp các thành viên tránh gọi lặp lại và theo dõi học
+              sinh đang cần hỗ trợ.
             </p>
           </div>
         </section>
