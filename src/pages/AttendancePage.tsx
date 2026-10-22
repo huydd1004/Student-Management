@@ -778,8 +778,7 @@ export function AttendancePage() {
           </div>
         ) : incidents.length === 0 ? (
           <div className="px-5 py-12 text-center text-sm text-slate-500">
-            Chưa có học sinh vắng hoặc đi muộn trong 30 ngày gần
-            nhất.
+            Chưa có học sinh vắng trong 30 ngày gần nhất.
           </div>
         ) : (
           <div className="divide-y divide-slate-100">

@@ -8,6 +8,7 @@ import {
   useAuth,
   type AccessStatus,
 } from '../auth/AuthProvider';
+import { ThemeToggle } from '../components/theme/ThemeToggle';
 
 interface AccessDeniedPageProps {
   status: Extract<
@@ -24,7 +25,10 @@ export function AccessDeniedPage({
   const hasConnectionError = status === 'error';
 
   return (
-    <main className="grid min-h-screen place-items-center bg-gradient-to-br from-lotus-50 via-white to-pink-50 px-5 py-10">
+    <main className="theme-auth-background relative grid min-h-screen place-items-center bg-gradient-to-br from-lotus-50 via-white to-pink-50 px-5 py-10">
+      <div className="absolute right-5 top-5">
+        <ThemeToggle />
+      </div>
       <section className="w-full max-w-md rounded-3xl border border-white bg-white p-8 text-center shadow-2xl shadow-lotus-200/50">
         <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-lotus-100 text-lotus-700">
           {hasConnectionError ? (

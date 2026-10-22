@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Bell, Menu } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { Outlet } from 'react-router'
 import { CLASSROOM_CONFIG } from '../../config/classroom'
+import { ThemeToggle } from '../theme/ThemeToggle'
 import { AppSidebar } from './AppSidebar'
 
 export function AppLayout() {
@@ -47,13 +48,7 @@ export function AppLayout() {
             </div>
           </div>
 
-          <button
-            type="button"
-            className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:border-pink-200 hover:bg-lotus-50 hover:text-lotus-700"
-            aria-label="Xem thông báo"
-          >
-            <Bell aria-hidden="true" size={20} />
-          </button>
+          <ThemeToggle />
         </header>
 
         <Outlet />

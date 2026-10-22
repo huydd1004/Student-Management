@@ -1,4 +1,5 @@
 import { ArrowRight, ClipboardCheck, Dices } from 'lucide-react'
+import { Link } from 'react-router'
 
 const quickActions = [
   {
@@ -8,8 +9,9 @@ const quickActions = [
     status: 'Chưa điểm danh',
     buttonLabel: 'Bắt đầu điểm danh',
     icon: ClipboardCheck,
+    to: '/attendance',
     cardClass:
-      'border-pink-200 bg-[linear-gradient(135deg,#ffffff_0%,#fff1f6_100%)]',
+      'quick-action-highlighted border-pink-200 bg-[linear-gradient(135deg,#ffffff_0%,#fff1f6_100%)]',
     iconClass: 'bg-lotus-600 text-white',
     statusClass: 'bg-white text-lotus-700 ring-1 ring-pink-100',
     buttonClass:
@@ -22,6 +24,7 @@ const quickActions = [
     status: 'Sẵn sàng',
     buttonLabel: 'Gọi một học sinh',
     icon: Dices,
+    to: '/lesson-check',
     cardClass: 'border-slate-200 bg-white',
     iconClass: 'bg-lotus-50 text-lotus-700',
     statusClass: 'bg-emerald-50 text-emerald-700',
@@ -54,6 +57,7 @@ export function QuickActions() {
             status,
             buttonLabel,
             icon: Icon,
+            to,
             cardClass,
             iconClass,
             statusClass,
@@ -85,13 +89,13 @@ export function QuickActions() {
                 {description}
               </p>
 
-              <button
-                type="button"
+              <Link
+                to={to}
                 className={`mt-6 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${buttonClass}`}
               >
                 {buttonLabel}
                 <ArrowRight aria-hidden="true" size={18} />
-              </button>
+              </Link>
             </article>
           ),
         )}

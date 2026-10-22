@@ -2,13 +2,18 @@ import {
   ClipboardCheck,
   Dices,
   LayoutDashboard,
+  LoaderCircle,
+  LogOut,
   School,
   Settings,
   Users,
   X,
 } from 'lucide-react'
+import { useState } from 'react'
 import { NavLink } from 'react-router'
+import { useAuth } from '../../auth/AuthProvider'
 import { CLASSROOM_CONFIG } from '../../config/classroom'
+import { ThemeToggle } from '../theme/ThemeToggle'
 
 type AppSidebarProps = {
   isMobileOpen: boolean
@@ -47,6 +52,22 @@ export function AppSidebar({
   isMobileOpen,
   onClose,
 }: AppSidebarProps) {
+  const { user, signOut } = useAuth()
+  const [isSigningOut, setIsSigningOut] = useState(false)
+  const [signOutError, setSignOutError] = useState('')
+
+  async function handleSignOut() {
+    setIsSigningOut(true)
+    setSignOutError('')
+
+    try {
+      await signOut()
+    } catch {
+      setSignOutError('Không thể đăng xuất. Vui lòng thử lại.')
+      setIsSigningOut(false)
+    }
+  }
+
   return (
     <>
       <button
@@ -115,14 +136,56 @@ export function AppSidebar({
           ))}
         </nav>
 
-        <div className="mt-auto rounded-2xl bg-lotus-50 p-4">
-          <p className="text-xs font-semibold text-lotus-700">
-            Năm học
-          </p>
+        <div className="mt-auto space-y-3 pt-5">
+          <div className="rounded-2xl bg-lotus-50 p-4">
+            <p className="text-xs font-semibold text-lotus-700">
+              Năm học
+            </p>
 
-          <p className="mt-1 font-bold text-slate-900">
-            {CLASSROOM_CONFIG.schoolYear}
-          </p>
+            <p className="mt-1 font-bold text-slate-900">
+              {CLASSROOM_CONFIG.schoolYear}
+            </p>
+          </div>
+
+          <ThemeToggle showLabel />
+
+          <div className="rounded-2xl border border-slate-200 p-3">
+            <div className="min-w-0 px-1 pb-3">
+              <p className="truncate text-sm font-semibold text-slate-900">
+                {user?.displayName || 'Thành viên lớp'}
+              </p>
+              <p className="mt-0.5 truncate text-xs text-slate-500">
+                {user?.email}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={isSigningOut}
+              onClick={() => void handleSignOut()}
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-pink-200 bg-white px-3 text-sm font-semibold text-lotus-700 transition hover:bg-lotus-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSigningOut ? (
+                <LoaderCircle
+                  aria-hidden="true"
+                  className="animate-spin"
+                  size={18}
+                />
+              ) : (
+                <LogOut aria-hidden="true" size={18} />
+              )}
+              {isSigningOut ? 'Đang đăng xuất...' : 'Đăng xuất'}
+            </button>
+
+            {signOutError ? (
+              <p
+                role="alert"
+                className="mt-2 text-center text-xs font-medium text-red-700"
+              >
+                {signOutError}
+              </p>
+            ) : null}
+          </div>
         </div>
       </aside>
     </>

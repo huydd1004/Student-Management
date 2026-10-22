@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '../auth/AuthProvider';
+import { ThemeToggle } from '../components/theme/ThemeToggle';
 import { CLASSROOM_CONFIG } from '../config/classroom';
 
 export function LoginPage() {
@@ -39,7 +40,10 @@ export function LoginPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-lotus-50 via-white to-pink-50 px-5 py-10">
+    <main className="theme-auth-background relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-lotus-50 via-white to-pink-50 px-5 py-10">
+      <div className="absolute right-5 top-5 z-10">
+        <ThemeToggle />
+      </div>
       <div
         aria-hidden="true"
         className="absolute -left-20 -top-20 size-72 rounded-full bg-lotus-200/50 blur-3xl"

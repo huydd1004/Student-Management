@@ -16,11 +16,15 @@ import type {
   AttendanceIncidentDocument,
   AttendanceIncidentStatus,
   AttendancePeriod,
+  AttendanceSessionDocument,
   LocalDate,
   WithId,
 } from '../../domain';
 import { db } from '../firebase';
-import { firestorePaths } from './paths';
+import {
+  createAttendanceSessionId,
+  firestorePaths,
+} from './paths';
 
 const ATTENDANCE_RETENTION_DAYS = 30;
 
@@ -48,6 +52,9 @@ export interface SaveAttendanceInput {
 export type AttendanceIncidentListItem =
   WithId<AttendanceIncidentDocument>;
 
+export type AttendanceSessionListItem =
+  WithId<AttendanceSessionDocument>;
+
 function createIncidentId(
   attendanceDate: LocalDate,
   period: AttendancePeriod,
@@ -71,6 +78,29 @@ export async function saveAttendance(
   input: SaveAttendanceInput,
 ) {
   const batch = writeBatch(db);
+  const sessionId = createAttendanceSessionId(
+    input.attendanceDate,
+    input.period,
+  );
+  const sessionReference = doc(
+    db,
+    firestorePaths.attendanceSession(
+      CLASSROOM_ID,
+      sessionId,
+    ),
+  );
+
+  batch.set(sessionReference, {
+    attendanceDate: input.attendanceDate,
+    period: input.period,
+    status: 'completed',
+    completedAt: serverTimestamp(),
+    completedBy: input.actorId,
+    createdAt: serverTimestamp(),
+    createdBy: input.actorId,
+    updatedAt: serverTimestamp(),
+    updatedBy: input.actorId,
+  });
 
   input.records.forEach((record) => {
     const incidentId = createIncidentId(
@@ -123,6 +153,35 @@ export async function saveAttendance(
   });
 
   await batch.commit();
+}
+
+export function subscribeToAttendanceSessionsForDate(
+  attendanceDate: LocalDate,
+  onSessionsChange: (
+    sessions: AttendanceSessionListItem[],
+  ) => void,
+  onError: (error: Error) => void,
+) {
+  const sessionsQuery = query(
+    collection(
+      db,
+      firestorePaths.attendanceSessions(CLASSROOM_ID),
+    ),
+    where('attendanceDate', '==', attendanceDate),
+  );
+
+  return onSnapshot(
+    sessionsQuery,
+    (snapshot) => {
+      onSessionsChange(
+        snapshot.docs.map((sessionSnapshot) => ({
+          ...(sessionSnapshot.data() as AttendanceSessionDocument),
+          id: sessionSnapshot.id,
+        })),
+      );
+    },
+    onError,
+  );
 }
 
 export function subscribeToAttendanceIncidents(

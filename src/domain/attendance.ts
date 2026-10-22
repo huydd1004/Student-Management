@@ -17,7 +17,6 @@ export interface AttendanceSessionDocument extends AuditFields {
   attendanceDate: LocalDate;
   period: AttendancePeriod;
   status: AttendanceSessionStatus;
-  notes?: string;
   completedAt?: AuditFields['updatedAt'];
   completedBy?: EntityId;
 }
