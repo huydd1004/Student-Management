@@ -7,5 +7,6 @@ export const COLLECTIONS = {
   attendanceRecords: 'records',
   attendanceIncidents: 'attendanceIncidents',
   lessonCheckCalls: 'lessonCheckCalls',
+  chatMessages: 'chatMessages',
   activityLogs: 'activityLogs',
 } as const;

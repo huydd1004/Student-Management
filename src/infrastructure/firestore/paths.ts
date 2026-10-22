@@ -28,6 +28,8 @@ export const firestorePaths = {
     `${COLLECTIONS.classes}/${classId}/${COLLECTIONS.attendanceIncidents}/${incidentId}`,
   lessonCheckCalls: (classId: string) =>
     `${COLLECTIONS.classes}/${classId}/${COLLECTIONS.lessonCheckCalls}`,
+  chatMessages: (classId: string) =>
+    `${COLLECTIONS.classes}/${classId}/${COLLECTIONS.chatMessages}`,
   activityLogs: (classId: string) =>
     `${COLLECTIONS.classes}/${classId}/${COLLECTIONS.activityLogs}`,
 } as const;

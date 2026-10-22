@@ -49,6 +49,22 @@ service cloud.firestore {
         && request.resource.data.expiresAt is timestamp;
     }
 
+    function validChatMessage(classId) {
+      return request.resource.data.keys().hasOnly([
+          'text',
+          'senderId',
+          'senderName',
+          'createdAt'
+        ])
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.senderName
+          == get(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)).data.displayName
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 2000
+        && request.resource.data.createdAt == request.time;
+    }
+
     match /classes/{classId} {
       allow read: if isActiveAdmin(classId);
       allow create: if false;
@@ -95,6 +111,13 @@ service cloud.firestore {
       match /lessonCheckCalls/{callId} {
         allow read, create, update: if isActiveAdmin(classId);
         allow delete: if false;
+      }
+
+      match /chatMessages/{messageId} {
+        allow read: if isActiveAdmin(classId);
+        allow create: if isActiveAdmin(classId)
+          && validChatMessage(classId);
+        allow update, delete: if false;
       }
 
       match /activityLogs/{logId} {

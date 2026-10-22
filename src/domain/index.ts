@@ -1,6 +1,7 @@
 export * from './activity-log';
 export * from './attendance';
 export * from './classroom';
+export * from './chat-message';
 export * from './common';
 export * from './lesson-check';
 export * from './member';

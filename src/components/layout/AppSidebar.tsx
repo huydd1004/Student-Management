@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   LoaderCircle,
   LogOut,
+  MessagesSquare,
   School,
   Settings,
   Users,
@@ -43,6 +44,11 @@ const navigationItems = [
     label: 'Gọi bài',
     icon: Dices,
     to: '/lesson-check',
+  },
+  {
+    label: 'Trao đổi',
+    icon: MessagesSquare,
+    to: '/chat',
   },
   {
     label: 'Cài đặt',
@@ -86,7 +92,7 @@ export function AppSidebar({
 
       <aside
         id="app-sidebar"
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-pink-100 bg-white p-5 shadow-xl transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:min-h-screen lg:translate-x-0 lg:shadow-none ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto border-r border-pink-100 bg-white p-5 shadow-xl transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:min-h-screen lg:translate-x-0 lg:shadow-none ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -120,7 +126,7 @@ export function AppSidebar({
         </div>
 
         <nav
-          className="mt-8 space-y-2"
+          className="mt-4 space-y-2"
           aria-label="Điều hướng chính"
         >
           {navigationItems.map(({ label, icon: Icon, to }) => (
