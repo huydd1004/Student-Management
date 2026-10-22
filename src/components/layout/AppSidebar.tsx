@@ -87,24 +87,28 @@ export function AppSidebar({
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex items-center gap-3 px-2 py-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-lotus-600 text-white">
+        <div className="relative flex flex-col items-center px-2 pb-5 pt-3 text-center">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-lotus-600 text-white shadow-lg shadow-lotus-200/50">
             <School aria-hidden="true" size={23} />
           </div>
 
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold uppercase leading-4 tracking-[0.08em] text-lotus-600">
+          <p className="mt-3 rounded-full bg-lotus-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-lotus-700">
+            Năm học {CLASSROOM_CONFIG.schoolYear}
+          </p>
+
+          <div className="mt-3 min-w-0">
+            <p className="text-xs font-semibold uppercase leading-5 tracking-[0.06em] text-lotus-600">
               {CLASSROOM_CONFIG.schoolName}
             </p>
 
-            <p className="mt-1 font-bold text-slate-900">
+            <p className="mt-1 text-lg font-bold text-slate-900">
               Lớp {CLASSROOM_CONFIG.className}
             </p>
           </div>
 
           <button
             type="button"
-            className="flex size-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 lg:hidden"
+            className="absolute right-0 top-3 flex size-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 lg:hidden"
             aria-label="Đóng menu"
             onClick={onClose}
           >
@@ -137,25 +141,12 @@ export function AppSidebar({
         </nav>
 
         <div className="mt-auto space-y-3 pt-5">
-          <div className="rounded-2xl bg-lotus-50 p-4">
-            <p className="text-xs font-semibold text-lotus-700">
-              Năm học
-            </p>
-
-            <p className="mt-1 font-bold text-slate-900">
-              {CLASSROOM_CONFIG.schoolYear}
-            </p>
-          </div>
-
           <ThemeToggle showLabel />
 
           <div className="rounded-2xl border border-slate-200 p-3">
             <div className="min-w-0 px-1 pb-3">
               <p className="truncate text-sm font-semibold text-slate-900">
                 {user?.displayName || 'Thành viên lớp'}
-              </p>
-              <p className="mt-0.5 truncate text-xs text-slate-500">
-                {user?.email}
               </p>
             </div>
 

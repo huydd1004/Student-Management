@@ -1,13 +1,10 @@
-import {
-  Dices,
-  Settings,
-} from 'lucide-react'
 import { Navigate, Route, Routes } from 'react-router'
 import { AppLayout } from '../components/layout/AppLayout'
 import { DashboardPage } from '../pages/DashboardPage'
 import { AttendancePage } from '../pages/AttendancePage'
-import { PlaceholderPage } from '../pages/PlaceholderPage'
 import { StudentsPage } from '../pages/StudentsPage'
+import { LessonCheckPage } from '../pages/LessonCheckPage'
+import { SettingsPage } from '../pages/SettingsPage'
 import { useAuth } from '../auth/AuthProvider';
 import { LoginPage } from '../pages/LoginPage';
 import { AccessDeniedPage } from '../pages/AccessDeniedPage';
@@ -61,24 +58,12 @@ if (accessStatus === 'unauthorized' || accessStatus === 'error') {
 
         <Route
           path="lesson-check"
-          element={
-            <PlaceholderPage
-              title="Gọi kiểm tra bài cũ"
-              description="Chọn ngẫu nhiên học sinh và lưu lại lịch sử kiểm tra bài cũ."
-              icon={Dices}
-            />
-          }
+          element={<LessonCheckPage />}
         />
 
         <Route
           path="settings"
-          element={
-            <PlaceholderPage
-              title="Cài đặt"
-              description="Quản lý thông tin lớp học, năm học và các thiết lập chung."
-              icon={Settings}
-            />
-          }
+          element={<SettingsPage />}
         />
 
         <Route

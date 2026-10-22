@@ -8,7 +8,10 @@ export type LessonCheckOutcome =
 
 export interface LessonCheckCallDocument extends AuditFields {
   studentId: EntityId;
+  studentCode: string;
+  studentName: string;
   subjectId: EntityId;
+  subjectName: string;
   attendanceSessionId?: EntityId;
   cycleNumber: number;
   calledAt: TimestampValue;

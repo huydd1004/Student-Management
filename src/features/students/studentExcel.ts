@@ -1,4 +1,8 @@
-import type { Cell, Row, SheetData } from 'write-excel-file/browser'
+import writeXlsxFile, {
+  type Cell,
+  type Row,
+  type SheetData,
+} from 'write-excel-file/browser'
 
 import { CLASSROOM_CONFIG } from '../../config/classroom'
 import type {
@@ -192,10 +196,6 @@ function createDataCell(
 export async function exportStudentsToExcel(
   students: StudentListItem[],
 ) {
-  const { default: writeXlsxFile } = await import(
-    'write-excel-file/browser'
-  )
-
   const sheetData: SheetData = [
     createTitleRow(
       `${CLASSROOM_CONFIG.schoolName.toUpperCase()} - LỚP ${CLASSROOM_CONFIG.className}`,
@@ -234,7 +234,7 @@ export async function exportStudentsToExcel(
     ]),
   ]
 
-  await writeXlsxFile(
+  const workbookBlob = await writeXlsxFile(
     sheetData,
     {
       sheet: 'Học sinh',
@@ -250,9 +250,19 @@ export async function exportStudentsToExcel(
       fontFamily: 'Arial',
       fontSize: 10,
     },
-  ).toFile(
-    `danh-sach-hoc-sinh-lop-${CLASSROOM_CONFIG.className.replace('.', '-')}-${CLASSROOM_CONFIG.schoolYear}.xlsx`,
-  )
+  ).toBlob()
+  const fileName = `danh-sach-hoc-sinh-lop-${CLASSROOM_CONFIG.className.replace('.', '-')}-${CLASSROOM_CONFIG.schoolYear}.xlsx`
+  const downloadUrl = URL.createObjectURL(workbookBlob)
+  const downloadLink = document.createElement('a')
+
+  downloadLink.href = downloadUrl
+  downloadLink.download = fileName
+  downloadLink.style.display = 'none'
+  document.body.append(downloadLink)
+  downloadLink.click()
+  downloadLink.remove()
+
+  window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 10_000)
 }
 
 function findColumnIndex(
