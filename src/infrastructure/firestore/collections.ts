@@ -5,6 +5,7 @@ export const COLLECTIONS = {
   students: 'students',
   attendanceSessions: 'attendanceSessions',
   attendanceRecords: 'records',
+  attendanceIncidents: 'attendanceIncidents',
   lessonCheckCalls: 'lessonCheckCalls',
   activityLogs: 'activityLogs',
 } as const;

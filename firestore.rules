@@ -17,6 +17,16 @@ service cloud.firestore {
       return request.resource.data.status in ['active', 'transferred', 'inactive'];
     }
 
+    function validStudentAcademicPerformance() {
+      return !request.resource.data.keys().hasAny(['academicPerformance'])
+        || request.resource.data.academicPerformance in [
+          'weak',
+          'average',
+          'good',
+          'excellent'
+        ];
+    }
+
     function validAttendancePeriod() {
       return request.resource.data.period in ['morning', 'afternoon'];
     }
@@ -28,6 +38,15 @@ service cloud.firestore {
         'absent_unexcused',
         'late'
       ];
+    }
+
+    function validAttendanceIncident() {
+      return validAttendancePeriod()
+        && request.resource.data.status in [
+          'absent_excused',
+          'absent_unexcused'
+        ]
+        && request.resource.data.expiresAt is timestamp;
     }
 
     match /classes/{classId} {
@@ -48,8 +67,17 @@ service cloud.firestore {
 
       match /students/{studentId} {
         allow read: if isActiveAdmin(classId);
-        allow create, update: if isActiveAdmin(classId) && validStudentStatus();
-        allow delete: if false;
+        allow create, update: if isActiveAdmin(classId)
+          && validStudentStatus()
+          && validStudentAcademicPerformance();
+        allow delete: if isActiveAdmin(classId);
+      }
+
+      match /attendanceIncidents/{incidentId} {
+        allow read: if isActiveAdmin(classId);
+        allow create, update: if isActiveAdmin(classId)
+          && validAttendanceIncident();
+        allow delete: if isActiveAdmin(classId);
       }
 
       match /attendanceSessions/{sessionId} {

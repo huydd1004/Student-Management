@@ -7,6 +7,7 @@ export type StudentFormValues = {
   dateOfBirth: string
   gender: 'male' | 'female' | 'other' | 'unspecified'
   group: string
+  academicPerformance: '' | 'weak' | 'average' | 'good' | 'excellent'
   classDuty: string
   joinedOn: string
   status: 'active' | 'transferred' | 'inactive'
@@ -18,8 +19,14 @@ export type StudentFormValues = {
 
 type StudentFormModalProps = {
   isOpen: boolean
+  mode?: 'create' | 'edit'
+  initialValues?: Partial<StudentFormValues>
+  isSubmitting?: boolean
+  errorMessage?: string
   onClose: () => void
-  onSubmit: (values: StudentFormValues) => void
+  onSubmit: (
+    values: StudentFormValues,
+  ) => void | Promise<void>
 }
 
 const inputClassName =
@@ -27,9 +34,15 @@ const inputClassName =
 
 export function StudentFormModal({
   isOpen,
+  mode = 'create',
+  initialValues = {},
+  isSubmitting = false,
+  errorMessage = '',
   onClose,
   onSubmit,
 }: StudentFormModalProps) {
+  const isEditing = mode === 'edit'
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -45,6 +58,9 @@ export function StudentFormModal({
       dateOfBirth: readValue('dateOfBirth'),
       gender: readValue('gender') as StudentFormValues['gender'],
       group: readValue('group'),
+      academicPerformance: readValue(
+        'academicPerformance',
+      ) as StudentFormValues['academicPerformance'],
       classDuty: readValue('classDuty'),
       joinedOn: readValue('joinedOn'),
       status: readValue('status') as StudentFormValues['status'],
@@ -84,7 +100,7 @@ export function StudentFormModal({
               id="student-form-title"
               className="mt-1 text-xl font-bold text-slate-900"
             >
-              Thêm học sinh mới
+              {isEditing ? 'Chỉnh sửa học sinh' : 'Thêm học sinh mới'}
             </h2>
           </div>
 
@@ -100,6 +116,7 @@ export function StudentFormModal({
 
         <form
           onSubmit={handleSubmit}
+          aria-busy={isSubmitting}
           className="p-5 sm:p-6"
         >
           <section>
@@ -119,6 +136,7 @@ export function StudentFormModal({
                   name="studentCode"
                   type="text"
                   required
+                  defaultValue={initialValues.studentCode ?? ''}
                   placeholder="Ví dụ: HS001"
                   className={inputClassName}
                 />
@@ -131,6 +149,7 @@ export function StudentFormModal({
                   name="fullName"
                   type="text"
                   required
+                  defaultValue={initialValues.fullName ?? ''}
                   placeholder="Nhập đầy đủ họ và tên"
                   className={inputClassName}
                 />
@@ -142,6 +161,7 @@ export function StudentFormModal({
                 <input
                   name="dateOfBirth"
                   type="date"
+                  defaultValue={initialValues.dateOfBirth ?? ''}
                   className={inputClassName}
                 />
               </label>
@@ -151,7 +171,7 @@ export function StudentFormModal({
 
                 <select
                   name="gender"
-                  defaultValue="unspecified"
+                  defaultValue={initialValues.gender ?? 'unspecified'}
                   className={inputClassName}
                 >
                   <option value="unspecified">Chưa xác định</option>
@@ -167,9 +187,28 @@ export function StudentFormModal({
                 <input
                   name="group"
                   type="text"
+                  defaultValue={initialValues.group ?? ''}
                   placeholder="Ví dụ: Tổ 1"
                   className={inputClassName}
                 />
+              </label>
+
+              <label className="text-sm font-medium text-slate-700">
+                Học lực theo dõi
+
+                <select
+                  name="academicPerformance"
+                  defaultValue={
+                    initialValues.academicPerformance ?? ''
+                  }
+                  className={inputClassName}
+                >
+                  <option value="">Chưa đánh giá</option>
+                  <option value="weak">Yếu</option>
+                  <option value="average">Trung bình</option>
+                  <option value="good">Khá</option>
+                  <option value="excellent">Giỏi</option>
+                </select>
               </label>
 
               <label className="text-sm font-medium text-slate-700">
@@ -178,6 +217,7 @@ export function StudentFormModal({
                 <input
                   name="classDuty"
                   type="text"
+                  defaultValue={initialValues.classDuty ?? ''}
                   placeholder="Ví dụ: Lớp trưởng"
                   className={inputClassName}
                 />
@@ -189,6 +229,7 @@ export function StudentFormModal({
                 <input
                   name="joinedOn"
                   type="date"
+                  defaultValue={initialValues.joinedOn ?? ''}
                   className={inputClassName}
                 />
               </label>
@@ -198,7 +239,7 @@ export function StudentFormModal({
 
                 <select
                   name="status"
-                  defaultValue="active"
+                  defaultValue={initialValues.status ?? 'active'}
                   className={inputClassName}
                 >
                   <option value="active">Đang học</option>
@@ -227,6 +268,7 @@ export function StudentFormModal({
                 <input
                   name="guardianName"
                   type="text"
+                  defaultValue={initialValues.guardianName ?? ''}
                   placeholder="Nhập họ tên phụ huynh"
                   className={inputClassName}
                 />
@@ -238,6 +280,7 @@ export function StudentFormModal({
                 <input
                   name="guardianRelationship"
                   type="text"
+                  defaultValue={initialValues.guardianRelationship ?? ''}
                   placeholder="Ví dụ: Mẹ"
                   className={inputClassName}
                 />
@@ -250,6 +293,7 @@ export function StudentFormModal({
                   name="guardianPhone"
                   type="tel"
                   inputMode="tel"
+                  defaultValue={initialValues.guardianPhone ?? ''}
                   placeholder="Nhập số điện thoại liên hệ"
                   className={inputClassName}
                 />
@@ -264,21 +308,31 @@ export function StudentFormModal({
               <textarea
                 name="notes"
                 rows={4}
+                defaultValue={initialValues.notes ?? ''}
                 placeholder="Nhập ghi chú nếu cần..."
                 className="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-lotus-400 focus:ring-4 focus:ring-pink-100"
               />
             </label>
           </section>
 
+          {errorMessage && (
+            <p
+              role='alert'
+              className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {errorMessage}
+              </p>
+          )}
+
           <footer className="mt-8 flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-slate-500">
-              Dữ liệu đang được lưu tạm trong phiên làm việc này.
+              Dữ liệu sẽ được lưu an toàn trên hệ thống.
             </p>
 
             <div className="flex gap-3">
               <button
                 type="button"
-                className="flex-1 rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:flex-none"
+                disabled={isSubmitting}
+                className="flex-1 rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:flex-none disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={onClose}
               >
                 Hủy
@@ -286,9 +340,16 @@ export function StudentFormModal({
 
               <button
                 type="submit"
-                className="flex-1 rounded-xl bg-lotus-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-lotus-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lotus-600 sm:flex-none"
+                disabled={isSubmitting}
+                className="flex-1 rounded-xl bg-lotus-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-lotus-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lotus-600 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none"
               >
-                Lưu học sinh
+                {isSubmitting
+                  ? isEditing
+                    ? 'Đang cập nhật...'
+                    : 'Đang lưu...'
+                  : isEditing
+                    ? 'Cập nhật học sinh'
+                    : 'Lưu học sinh'}
               </button>
             </div>
           </footer>

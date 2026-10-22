@@ -2,6 +2,11 @@ import type { AuditFields, LocalDate } from './common';
 
 export type StudentGender = 'male' | 'female' | 'other' | 'unspecified';
 export type StudentStatus = 'active' | 'transferred' | 'inactive';
+export type StudentAcademicPerformance =
+  | 'weak'
+  | 'average'
+  | 'good'
+  | 'excellent';
 
 export interface GuardianContact {
   fullName: string;
@@ -17,6 +22,8 @@ export interface StudentDocument extends AuditFields {
   dateOfBirth?: LocalDate;
   gender: StudentGender;
   group?: string;
+  /** Đánh giá nội bộ của giáo viên chủ nhiệm để theo dõi quá trình học. */
+  academicPerformance?: StudentAcademicPerformance;
   classDuty?: string;
   guardian?: GuardianContact;
   joinedOn?: LocalDate;

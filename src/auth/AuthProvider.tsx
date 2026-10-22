@@ -11,15 +11,30 @@ import {
   signOut as firebaseSignOut,
   type User,
 } from 'firebase/auth';
+import {
+  doc,
+  getDoc,
+} from 'firebase/firestore';
 
+import { CLASSROOM_ID } from '../config/classroom';
 import {
   auth,
+  db,
   googleProvider,
 } from '../infrastructure/firebase';
+import { firestorePaths } from '../infrastructure/firestore';
+
+export type AccessStatus =
+  | 'checking'
+  | 'signed-out'
+  | 'authorized'
+  | 'unauthorized'
+  | 'error';
 
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
+  accessStatus: AccessStatus;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -30,18 +45,72 @@ export function AuthProvider({
   children,
 }: PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [accessStatus, setAccessStatus] =
+    useState<AccessStatus>('checking');
+
+  const isLoading = accessStatus === 'checking';
 
   useEffect(() => {
+    let isCancelled = false;
+
     const unsubscribe = onAuthStateChanged(
       auth,
-      (currentUser) => {
+      async (currentUser) => {
+        if (isCancelled) {
+          return;
+        }
+
         setUser(currentUser);
-        setIsLoading(false);
+
+        if (!currentUser) {
+          setAccessStatus('signed-out');
+          return;
+        }
+
+        setAccessStatus('checking');
+
+        try {
+          const memberPath = firestorePaths.member(
+            CLASSROOM_ID,
+            currentUser.uid,
+          );
+
+          const memberSnapshot = await getDoc(
+            doc(db, memberPath),
+          );
+
+          if (isCancelled) {
+            return;
+          }
+
+          if (!memberSnapshot.exists()) {
+            setAccessStatus('unauthorized');
+            return;
+          }
+
+          const member = memberSnapshot.data();
+
+          const isActiveAdmin =
+            member.role === 'admin' &&
+            member.status === 'active';
+
+          setAccessStatus(
+            isActiveAdmin
+              ? 'authorized'
+              : 'unauthorized',
+          );
+        } catch {
+          if (!isCancelled) {
+            setAccessStatus('error');
+          }
+        }
       },
     );
 
-    return unsubscribe;
+    return () => {
+      isCancelled = true;
+      unsubscribe();
+    };
   }, []);
 
   async function signInWithGoogle() {
@@ -57,6 +126,7 @@ export function AuthProvider({
       value={{
         user,
         isLoading,
+        accessStatus,
         signInWithGoogle,
         signOut,
       }}

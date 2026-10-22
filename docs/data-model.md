@@ -23,8 +23,7 @@ classes/{classId}
 ├── members/{userId}
 ├── subjects/{subjectId}
 ├── students/{studentId}
-├── attendanceSessions/{sessionId}
-│   └── records/{studentId}
+├── attendanceIncidents/{date_period_studentId}
 ├── lessonCheckCalls/{callId}
 └── activityLogs/{logId}
 ```
@@ -77,35 +76,30 @@ Hồ sơ học sinh gồm:
 - họ tên và tên đã chuẩn hóa để tìm kiếm;
 - ngày sinh, giới tính;
 - tổ và chức vụ trong lớp;
+- đánh giá theo dõi của giáo viên chủ nhiệm: `weak` (Yếu), `average` (Trung bình), `good` (Khá) hoặc `excellent` (Giỏi);
 - người liên hệ, quan hệ với học sinh và số điện thoại;
 - ngày vào lớp, ngày rời lớp;
 - trạng thái `active`, `transferred` hoặc `inactive`;
 - ghi chú tùy chọn;
 - thông tin người tạo/cập nhật và thời điểm cập nhật.
 
-Không xóa tài liệu học sinh khi chuyển trường hoặc nghỉ học. Thay vào đó, đổi `status` để dữ liệu điểm danh và gọi bài trước đây vẫn còn nguyên.
+Thông thường nên đổi `status` khi học sinh chuyển trường hoặc nghỉ học. Khi người dùng chủ động chọn xóa và xác nhận, hồ sơ cùng lịch sử điểm danh liên quan cũng được xóa.
 
-### `attendanceSessions/{sessionId}`
+### `attendanceIncidents/{date_period_studentId}`
 
-Mỗi ngày có tối đa hai phiên điểm danh. Mã phiên có dạng:
+Chỉ lưu học sinh vắng hoặc đi muộn; học sinh có mặt không cần tạo tài liệu. Mã tài liệu có dạng:
 
 ```text
-2026-10-21_morning
-2026-10-21_afternoon
+2026-10-21_morning_studentId
+2026-10-21_afternoon_studentId
 ```
 
-Tài liệu phiên chứa ngày, buổi, trạng thái đang mở/đã hoàn thành và ghi chú chung.
+Chỉ hai trạng thái vắng được lưu:
 
-### `attendanceSessions/{sessionId}/records/{studentId}`
-
-Mỗi học sinh có một bản ghi trong phiên điểm danh:
-
-- `present`: có mặt;
 - `absent_excused`: vắng có phép;
 - `absent_unexcused`: vắng không phép;
-- `late`: đi muộn.
 
-Tách từng học sinh thành một tài liệu giúp hai người có thể cập nhật đồng thời mà ít xảy ra ghi đè dữ liệu.
+Lý do vắng là ghi chú không bắt buộc. Trạng thái đi muộn và số phút đi muộn chỉ dùng trong lần điểm danh hiện tại, không được lưu vào Firestore. Mỗi tài liệu vắng học có `expiresAt` bằng cuối ngày điểm danh cộng 30 ngày; giao diện ẩn ngay dữ liệu hết hạn và dọn các tài liệu đó khi người quản trị mở trang điểm danh.
 
 ### `lessonCheckCalls/{callId}`
 
@@ -133,7 +127,8 @@ Lưu các thao tác quan trọng như thêm/sửa học sinh, hoàn thành đi�
 - Mặc định từ chối mọi truy cập không được khai báo.
 - Chỉ tài khoản đã đăng nhập và có membership `active/admin` mới truy cập được lớp.
 - Hai quản trị viên có quyền ngang nhau.
-- Không cho xóa cứng học sinh, điểm danh, lịch sử gọi bài hoặc nhật ký.
+- Quản trị viên được xóa học sinh và các bản ghi điểm danh liên quan sau khi xác nhận trên giao diện.
+- Chỉ quản trị viên được tạo, sửa hoặc xóa bản ghi điểm danh; quy tắc kiểm tra buổi học, trạng thái, thời hạn lưu và số phút đi muộn.
 - Người tạo nhật ký phải trùng với UID của tài khoản đang đăng nhập.
 - Việc tạo lớp và hai membership đầu tiên là bước khởi tạo quản trị, thực hiện sau khi cấu hình Firebase.
 

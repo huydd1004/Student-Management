@@ -72,7 +72,7 @@ export function AppSidebar({
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold uppercase tracking-[0.12em] text-lotus-600">
+            <p className="text-[11px] font-semibold uppercase leading-4 tracking-[0.08em] text-lotus-600">
               {CLASSROOM_CONFIG.schoolName}
             </p>
 

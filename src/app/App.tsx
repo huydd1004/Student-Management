@@ -1,39 +1,43 @@
 import {
-  ClipboardCheck,
   Dices,
   Settings,
 } from 'lucide-react'
 import { Navigate, Route, Routes } from 'react-router'
 import { AppLayout } from '../components/layout/AppLayout'
 import { DashboardPage } from '../pages/DashboardPage'
+import { AttendancePage } from '../pages/AttendancePage'
 import { PlaceholderPage } from '../pages/PlaceholderPage'
 import { StudentsPage } from '../pages/StudentsPage'
 import { useAuth } from '../auth/AuthProvider';
 import { LoginPage } from '../pages/LoginPage';
+import { AccessDeniedPage } from '../pages/AccessDeniedPage';
 
 export function App() {
-  const { user, isLoading } = useAuth();
+const { user, isLoading, accessStatus } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-lotus-50">
-        <div
-          role="status"
-          className="flex flex-col items-center gap-3 text-lotus-700"
-        >
-          <div className="size-10 animate-spin rounded-full border-4 border-lotus-200 border-t-lotus-600" />
-
-          <span className="text-sm font-medium">
-            Đang kiểm tra phiên đăng nhập...
-          </span>
-        </div>
+if (isLoading) {
+  return (
+    <div className="grid min-h-screen place-items-center bg-lotus-50">
+      <div
+        role="status"
+        className="flex flex-col items-center gap-3 text-lotus-700"
+      >
+        <div className="size-10 animate-spin rounded-full border-4 border-lotus-200 border-t-lotus-600" />
+        <span className="text-sm font-medium">
+          Chờ chồng một tí nhé hehe...
+        </span>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
-  if (!user) {
-    return <LoginPage />;
-  }
+if (!user) {
+  return <LoginPage />;
+}
+
+if (accessStatus === 'unauthorized' || accessStatus === 'error') {
+  return <AccessDeniedPage status={accessStatus} />;
+}
 
   return (
     <Routes>
@@ -51,14 +55,8 @@ export function App() {
           />
 
         <Route
-          path="attendance"
-          element={
-            <PlaceholderPage
-              title="Điểm danh"
-              description="Thực hiện và xem lại kết quả điểm danh theo ngày, buổi sáng và buổi chiều."
-              icon={ClipboardCheck}
-            />
-          }
+          path='attendance'
+          element={<AttendancePage />}
         />
 
         <Route

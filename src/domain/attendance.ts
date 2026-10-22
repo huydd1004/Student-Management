@@ -9,6 +9,10 @@ export type AttendanceStatus =
   | 'absent_unexcused'
   | 'late';
 
+export type AttendanceIncidentStatus =
+  | 'absent_excused'
+  | 'absent_unexcused';
+
 export interface AttendanceSessionDocument extends AuditFields {
   attendanceDate: LocalDate;
   period: AttendancePeriod;
@@ -22,4 +26,15 @@ export interface AttendanceRecordDocument extends AuditFields {
   studentId: EntityId;
   status: AttendanceStatus;
   notes?: string;
+}
+
+export interface AttendanceIncidentDocument extends AuditFields {
+  studentId: EntityId;
+  studentCode: string;
+  studentName: string;
+  attendanceDate: LocalDate;
+  period: AttendancePeriod;
+  status: AttendanceIncidentStatus;
+  absenceReason?: string;
+  expiresAt: AuditFields['updatedAt'];
 }
