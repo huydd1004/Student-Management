@@ -15,7 +15,7 @@ type StudentListItem = StudentFormValues & {
   id: string
 }
 
-type StudentStatusFilter = | 'all' | StudentFormValues['status']
+type StudentStatusFilter = 'all' | StudentFormValues['status']
 
 const statusLabels: Record<StudentFormValues['status'], string> = {
   active: 'Đang học',
@@ -217,7 +217,7 @@ export function StudentsPage() {
                       </h3>
 
                       <p className='mt-2 text-sm leading-6 text-slate-500'>
-                        {students.length === 0 ? 'Thêm học sinh đầu tiên để bắt đầu quản lý danh sách, điểm danh vào gọi kiểm tra bài cũ.' : 'Không có học sinh phù hợp với từ quá hoặc trạng thái đã chọn.'}
+                        {students.length === 0 ? 'Thêm học sinh đầu tiên để bắt đầu quản lý danh sách, điểm danh và gọi kiểm tra bài cũ.' : 'Không có học sinh phù hợp với từ khóa hoặc trạng thái đã chọn.'}
                       </p>
 
                       {students.length === 0 ? (

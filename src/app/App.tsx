@@ -8,8 +8,33 @@ import { AppLayout } from '../components/layout/AppLayout'
 import { DashboardPage } from '../pages/DashboardPage'
 import { PlaceholderPage } from '../pages/PlaceholderPage'
 import { StudentsPage } from '../pages/StudentsPage'
+import { useAuth } from '../auth/AuthProvider';
+import { LoginPage } from '../pages/LoginPage';
 
 export function App() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-lotus-50">
+        <div
+          role="status"
+          className="flex flex-col items-center gap-3 text-lotus-700"
+        >
+          <div className="size-10 animate-spin rounded-full border-4 border-lotus-200 border-t-lotus-600" />
+
+          <span className="text-sm font-medium">
+            Đang kiểm tra phiên đăng nhập...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
   return (
     <Routes>
       <Route element={<AppLayout />}>
