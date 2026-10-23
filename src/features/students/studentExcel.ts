@@ -27,6 +27,7 @@ const EXCEL_HEADERS = [
   'Chức vụ',
   'Ngày vào lớp',
   'Trạng thái',
+  'Địa chỉ thường trú',
   'Họ tên phụ huynh',
   'Quan hệ',
   'Số điện thoại',
@@ -67,6 +68,7 @@ const excelColumns = [
   { width: 18 },
   { width: 14 },
   { width: 20 },
+  { width: 36 },
   { width: 24 },
   { width: 15 },
   { width: 18 },
@@ -223,6 +225,7 @@ export async function exportStudentsToExcel(
       createDataCell(student.classDuty ?? ''),
       createDataCell(toExcelDate(student.joinedOn), 'center', 'dd/mm/yyyy'),
       createDataCell(statusLabels[student.status], 'center'),
+      createDataCell(student.permanentAddress ?? ''),
       createDataCell(student.guardian?.fullName ?? ''),
       createDataCell(student.guardian?.relationship ?? '', 'center'),
       createDataCell(
@@ -332,6 +335,10 @@ export async function parseStudentsFromExcel(
     classDuty: findColumnIndex(headers, ['Chức vụ']),
     joinedOn: findColumnIndex(headers, ['Ngày vào lớp']),
     status: findColumnIndex(headers, ['Trạng thái']),
+    permanentAddress: findColumnIndex(headers, [
+      'Địa chỉ thường trú',
+      'Địa chỉ',
+    ]),
     guardianName: findColumnIndex(headers, ['Họ tên phụ huynh']),
     guardianRelationship: findColumnIndex(headers, ['Quan hệ']),
     guardianPhone: findColumnIndex(headers, ['Số điện thoại', 'SĐT']),
@@ -457,6 +464,13 @@ export async function parseStudentsFromExcel(
         ? { classDuty: readCell(row[column.classDuty]) }
         : {}),
       ...(joinedOn ? { joinedOn } : {}),
+      ...(readCell(row[column.permanentAddress])
+        ? {
+            permanentAddress: readCell(
+              row[column.permanentAddress],
+            ),
+          }
+        : {}),
       ...(hasGuardian
         ? {
             guardian: {

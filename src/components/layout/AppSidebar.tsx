@@ -11,19 +11,31 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { useState } from 'react'
-import { NavLink } from 'react-router'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { NavLink, useLocation } from 'react-router'
 import { useAuth } from '../../auth/AuthProvider'
 import {
   CLASSROOM_CONFIG,
   CLASS_MEMBER_TITLES,
 } from '../../config/classroom'
+import type { TimestampValue } from '../../domain'
+import {
+  markChatMessagesAsRead,
+  subscribeToChatMessages,
+  subscribeToMemberChatReadAt,
+  type ChatMessageListItem,
+} from '../../infrastructure/firestore'
 import { ThemeToggle } from '../theme/ThemeToggle'
 
 type AppSidebarProps = {
   isMobileOpen: boolean
   onClose: () => void
 }
+
+// Mốc bắt đầu tính thông báo mới, tránh coi toàn bộ lịch sử cũ là chưa đọc.
+const CHAT_UNREAD_ROLLOUT_SECONDS = Math.floor(
+  Date.parse('2026-10-23T01:50:00Z') / 1_000,
+)
 
 const navigationItems = [
   {
@@ -68,8 +80,108 @@ export function AppSidebar({
   onClose,
 }: AppSidebarProps) {
   const { user, signOut } = useAuth()
+  const location = useLocation()
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [signOutError, setSignOutError] = useState('')
+  const [chatMessages, setChatMessages] = useState<
+    ChatMessageListItem[]
+  >([])
+  const [chatLastReadAt, setChatLastReadAt] =
+    useState<TimestampValue | null>(null)
+  const [hasLoadedChatMessages, setHasLoadedChatMessages] =
+    useState(false)
+  const [hasLoadedChatReadAt, setHasLoadedChatReadAt] =
+    useState(false)
+  const lastReadWriteKeyRef = useRef('')
+
+  useEffect(() => {
+    if (!user) return
+
+    const unsubscribeMessages = subscribeToChatMessages(
+      (messages) => {
+        setChatMessages(messages)
+        setHasLoadedChatMessages(true)
+      },
+      () => setHasLoadedChatMessages(true),
+    )
+    const unsubscribeReadAt = subscribeToMemberChatReadAt(
+      user.uid,
+      (readAt) => {
+        setChatLastReadAt(readAt)
+        setHasLoadedChatReadAt(true)
+      },
+      () => setHasLoadedChatReadAt(true),
+    )
+
+    return () => {
+      unsubscribeMessages()
+      unsubscribeReadAt()
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (
+      !user ||
+      !hasLoadedChatMessages ||
+      !hasLoadedChatReadAt
+    ) {
+      return
+    }
+
+    const isChatOpen = location.pathname === '/chat'
+
+    if (!isChatOpen) return
+
+    const latestMessageId = chatMessages.at(-1)?.id ?? 'empty'
+    const writeKey = `${user.uid}:chat:${latestMessageId}`
+
+    if (lastReadWriteKeyRef.current === writeKey) return
+
+    lastReadWriteKeyRef.current = writeKey
+    void markChatMessagesAsRead(user.uid).catch(() => {
+      lastReadWriteKeyRef.current = ''
+    })
+  }, [
+    chatMessages,
+    hasLoadedChatMessages,
+    hasLoadedChatReadAt,
+    location.pathname,
+    user,
+  ])
+
+  const unreadChatCount = useMemo(() => {
+    if (
+      !user ||
+      location.pathname === '/chat' ||
+      !hasLoadedChatReadAt
+    ) {
+      return 0
+    }
+
+    const effectiveReadAt = chatLastReadAt ?? {
+      seconds: CHAT_UNREAD_ROLLOUT_SECONDS,
+      nanoseconds: 0,
+    }
+
+    return chatMessages.filter((message) => {
+      if (message.senderId === user.uid || !message.createdAt) {
+        return false
+      }
+
+      return (
+        message.createdAt.seconds > effectiveReadAt.seconds ||
+        (message.createdAt.seconds === effectiveReadAt.seconds &&
+          message.createdAt.nanoseconds >
+            effectiveReadAt.nanoseconds)
+      )
+    }).length
+  }, [
+    chatLastReadAt,
+    chatMessages,
+    hasLoadedChatReadAt,
+    location.pathname,
+    user,
+  ])
 
   async function handleSignOut() {
     setIsSigningOut(true)
@@ -151,6 +263,14 @@ export function AppSidebar({
             >
               <Icon aria-hidden="true" size={20} strokeWidth={1.9} />
               <span>{label}</span>
+              {to === '/chat' && unreadChatCount > 0 ? (
+                <span
+                  className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-lotus-600 px-1.5 py-0.5 text-[11px] font-bold leading-4 text-white shadow-sm"
+                  aria-label={`${unreadChatCount} tin nhắn chưa đọc`}
+                >
+                  {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                </span>
+              ) : null}
             </NavLink>
           ))}
         </nav>

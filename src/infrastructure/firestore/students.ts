@@ -35,6 +35,7 @@ export interface CreateStudentInput {
   group?: string;
   academicPerformance?: StudentAcademicPerformance;
   classDuty?: string;
+  permanentAddress?: string;
   guardian?: GuardianContact;
   joinedOn?: LocalDate;
   status: StudentStatus;
@@ -91,6 +92,10 @@ export async function createStudent(
       ? { classDuty: input.classDuty.trim() }
       : {}),
 
+    ...(input.permanentAddress
+      ? { permanentAddress: input.permanentAddress.trim() }
+      : {}),
+
     ...(input.guardian
       ? {
           guardian: {
@@ -144,6 +149,8 @@ export async function updateStudent(
         dateOfBirth: input.dateOfBirth || deleteField(),
         group: input.group?.trim() || deleteField(),
         classDuty: input.classDuty?.trim() || deleteField(),
+        permanentAddress:
+          input.permanentAddress?.trim() || deleteField(),
         guardian: input.guardian? {
             fullName: input.guardian.fullName.trim(),
             relationship: input.guardian.relationship.trim(),
@@ -247,6 +254,8 @@ export async function importStudents(
           dateOfBirth: input.dateOfBirth || deleteField(),
           group: input.group?.trim() || deleteField(),
           classDuty: input.classDuty?.trim() || deleteField(),
+          permanentAddress:
+            input.permanentAddress?.trim() || deleteField(),
           guardian: guardian || deleteField(),
           joinedOn: input.joinedOn || deleteField(),
           notes: input.notes?.trim() || deleteField(),
@@ -276,6 +285,9 @@ export async function importStudents(
           : {}),
         ...(input.classDuty
           ? { classDuty: input.classDuty.trim() }
+          : {}),
+        ...(input.permanentAddress
+          ? { permanentAddress: input.permanentAddress.trim() }
           : {}),
         ...(guardian ? { guardian } : {}),
         ...(input.joinedOn ? { joinedOn: input.joinedOn } : {}),

@@ -9,6 +9,7 @@ export type StudentFormValues = {
   group: string
   academicPerformance: '' | 'weak' | 'average' | 'good' | 'excellent'
   classDuty: string
+  permanentAddress: string
   joinedOn: string
   status: 'active' | 'transferred' | 'inactive'
   guardianName: string
@@ -62,6 +63,7 @@ export function StudentFormModal({
         'academicPerformance',
       ) as StudentFormValues['academicPerformance'],
       classDuty: readValue('classDuty'),
+      permanentAddress: readValue('permanentAddress'),
       joinedOn: readValue('joinedOn'),
       status: readValue('status') as StudentFormValues['status'],
       guardianName: readValue('guardianName'),
@@ -248,6 +250,18 @@ export function StudentFormModal({
                   </option>
                   <option value="inactive">Ngừng học</option>
                 </select>
+              </label>
+
+              <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                Địa chỉ thường trú
+
+                <textarea
+                  name="permanentAddress"
+                  rows={3}
+                  defaultValue={initialValues.permanentAddress ?? ''}
+                  placeholder="Nhập địa chỉ thường trú của học sinh"
+                  className="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-lotus-400 focus:ring-4 focus:ring-pink-100"
+                />
               </label>
             </div>
           </section>

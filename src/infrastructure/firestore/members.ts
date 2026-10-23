@@ -1,10 +1,17 @@
 import {
   collection,
+  doc,
   onSnapshot,
+  serverTimestamp,
+  updateDoc,
 } from 'firebase/firestore'
 
 import { CLASSROOM_ID } from '../../config/classroom'
-import type { ClassMemberDocument, WithId } from '../../domain'
+import type {
+  ClassMemberDocument,
+  TimestampValue,
+  WithId,
+} from '../../domain'
 import { db } from '../firebase'
 import { firestorePaths } from './paths'
 
@@ -32,5 +39,32 @@ export function subscribeToMembers(
       onMembersChange(members)
     },
     onError,
+  )
+}
+
+export function subscribeToMemberChatReadAt(
+  memberId: string,
+  onReadAtChange: (readAt: TimestampValue | null) => void,
+  onError: (error: Error) => void,
+) {
+  return onSnapshot(
+    doc(db, firestorePaths.member(CLASSROOM_ID, memberId)),
+    (snapshot) => {
+      const member = snapshot.data({
+        serverTimestamps: 'estimate',
+      }) as ClassMemberDocument | undefined
+
+      onReadAtChange(member?.chatLastReadAt ?? null)
+    },
+    onError,
+  )
+}
+
+export async function markChatMessagesAsRead(memberId: string) {
+  await updateDoc(
+    doc(db, firestorePaths.member(CLASSROOM_ID, memberId)),
+    {
+      chatLastReadAt: serverTimestamp(),
+    },
   )
 }

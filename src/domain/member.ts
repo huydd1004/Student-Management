@@ -1,4 +1,4 @@
-import type { AuditFields } from './common';
+import type { AuditFields, TimestampValue } from './common';
 
 /**
  * Đây là quyền truy cập ứng dụng, không phải chức danh công việc.
@@ -12,4 +12,6 @@ export interface ClassMemberDocument extends AuditFields {
   email: string;
   role: ClassMemberRole;
   status: ClassMemberStatus;
+  /** Mốc đọc tin nhắn mới nhất, dùng để đồng bộ huy hiệu chưa đọc. */
+  chatLastReadAt?: TimestampValue;
 }

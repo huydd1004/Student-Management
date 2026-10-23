@@ -7,7 +7,10 @@ import {
 
 import {
   AlertTriangle,
+  Check,
   Download,
+  Eye,
+  EyeOff,
   LoaderCircle,
   Pencil,
   Plus,
@@ -21,6 +24,7 @@ import {
 import { useAuth } from '../auth/AuthProvider'
 import { StudentFormModal } from '../components/students/StudentFormModal'
 import type { StudentFormValues } from '../components/students/StudentFormModal'
+import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import {
   exportStudentsToExcel,
   parseStudentsFromExcel,
@@ -72,6 +76,16 @@ function normalizeSearchText(value: string) {
     .trim()
 }
 
+function maskPhoneNumber(phoneNumber: string) {
+  const digits = phoneNumber.replace(/\D/g, '')
+
+  if (digits.length <= 4) return digits || '—'
+
+  return `${digits.slice(0, 2)}${'•'.repeat(
+    Math.max(digits.length - 4, 4),
+  )}${digits.slice(-2)}`
+}
+
 function toCreateStudentInput(
   values: StudentFormValues,
 ): CreateStudentInput {
@@ -104,6 +118,10 @@ function toCreateStudentInput(
       ? { classDuty: values.classDuty }
       : {}),
 
+    ...(values.permanentAddress
+      ? { permanentAddress: values.permanentAddress }
+      : {}),
+
     ...(values.joinedOn
       ? { joinedOn: values.joinedOn }
       : {}),
@@ -134,6 +152,7 @@ function toStudentFormValues(
     academicPerformance:
       student.academicPerformance ?? '',
     classDuty: student.classDuty ?? '',
+    permanentAddress: student.permanentAddress ?? '',
     joinedOn: student.joinedOn ?? '',
     status: student.status,
     guardianName: student.guardian?.fullName ?? '',
@@ -159,6 +178,12 @@ export function StudentsPage() {
     useState<string | null>(null)
   const [deleteStudentError, setDeleteStudentError] =
     useState('')
+  const [studentPendingDeletion, setStudentPendingDeletion] =
+    useState<StudentListItem | null>(null)
+  const [visibleGuardianPhones, setVisibleGuardianPhones] =
+    useState<Set<string>>(new Set())
+  const [copiedPhoneStudentId, setCopiedPhoneStudentId] =
+    useState<string | null>(null)
   const [isImportingExcel, setIsImportingExcel] =
     useState(false)
   const [isExportingExcel, setIsExportingExcel] =
@@ -266,7 +291,23 @@ export function StudentsPage() {
     setStatusFilter('all')
   }
 
-  async function removeStudent(student: StudentListItem) {
+  function requestStudentDeletion(student: StudentListItem) {
+    setDeleteStudentError('')
+    setStudentPendingDeletion(student)
+  }
+
+  function closeDeleteDialog() {
+    if (deletingStudentId) return
+
+    setDeleteStudentError('')
+    setStudentPendingDeletion(null)
+  }
+
+  async function confirmStudentDeletion() {
+    const student = studentPendingDeletion
+
+    if (!student) return
+
     if (!user) {
       setDeleteStudentError(
         'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
@@ -274,23 +315,55 @@ export function StudentsPage() {
       return
     }
 
-    const isConfirmed = window.confirm(
-      `Bạn có chắc muốn xóa học sinh “${student.fullName}”? Dữ liệu học sinh và lịch sử điểm danh liên quan sẽ bị xóa.`,
-    )
-
-    if (!isConfirmed) return
-
     setDeletingStudentId(student.id)
     setDeleteStudentError('')
 
     try {
       await deleteStudent(student.id)
+      setVisibleGuardianPhones((currentIds) => {
+        const nextIds = new Set(currentIds)
+        nextIds.delete(student.id)
+        return nextIds
+      })
+      setStudentPendingDeletion(null)
     } catch {
       setDeleteStudentError(
         'Không thể xóa học sinh. Vui lòng kiểm tra kết nối và thử lại.',
       )
     } finally {
       setDeletingStudentId(null)
+    }
+  }
+
+  function toggleGuardianPhone(studentId: string) {
+    setCopiedPhoneStudentId(null)
+    setVisibleGuardianPhones((currentIds) => {
+      const nextIds = new Set(currentIds)
+
+      if (nextIds.has(studentId)) {
+        nextIds.delete(studentId)
+      } else {
+        nextIds.add(studentId)
+      }
+
+      return nextIds
+    })
+  }
+
+  async function copyGuardianPhone(
+    studentId: string,
+    phoneNumber: string,
+  ) {
+    try {
+      await navigator.clipboard.writeText(phoneNumber)
+      setCopiedPhoneStudentId(studentId)
+      window.setTimeout(() => {
+        setCopiedPhoneStudentId((currentId) =>
+          currentId === studentId ? null : currentId,
+        )
+      }, 1_600)
+    } catch {
+      setCopiedPhoneStudentId(null)
     }
   }
 
@@ -459,15 +532,6 @@ export function StudentsPage() {
         </p>
       )}
 
-      {deleteStudentError && (
-        <p
-          role="alert"
-          className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-        >
-          {deleteStudentError}
-        </p>
-      )}
-
       <section className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col gap-4 border-b border-slate-200 p-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative w-full lg:max-w-md">
@@ -514,7 +578,7 @@ export function StudentsPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[940px] border-collapse">
+          <table className="w-full min-w-[1160px] border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/80">
                 <th className="w-20 px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -538,6 +602,10 @@ export function StudentsPage() {
                 </th>
 
                 <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  SĐT người giám hộ
+                </th>
+
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Trạng thái
                 </th>
 
@@ -550,7 +618,7 @@ export function StudentsPage() {
             <tbody>
               {isStudentsLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-16">
+                  <td colSpan={8} className="px-5 py-16">
                     <div
                       role="status"
                       className="flex items-center justify-center gap-3 text-sm font-medium text-lotus-700"
@@ -566,7 +634,7 @@ export function StudentsPage() {
                 </tr>
               ) : studentsError ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-16">
+                  <td colSpan={8} className="px-5 py-16">
                     <div
                       role="alert"
                       className="mx-auto flex max-w-md flex-col items-center text-center"
@@ -586,7 +654,7 @@ export function StudentsPage() {
                 </tr>
               ) : filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-16">
+                  <td colSpan={8} className="px-5 py-16">
                     <div className="mx-auto flex max-w-md flex-col items-center text-center">
                       <div className="flex size-16 items-center justify-center rounded-2xl bg-lotus-50 text-lotus-700">
                         <UsersRound
@@ -676,6 +744,68 @@ export function StudentsPage() {
                     </td>
 
                     <td className="px-5 py-4">
+                      {student.guardian?.phoneNumber ? (
+                        <div className="flex min-w-44 items-center gap-2">
+                          <button
+                            type="button"
+                            disabled={!visibleGuardianPhones.has(student.id)}
+                            onClick={() =>
+                              void copyGuardianPhone(
+                                student.id,
+                                student.guardian?.phoneNumber ?? '',
+                              )
+                            }
+                            className={`min-w-0 rounded-lg px-2 py-1 text-sm font-semibold transition ${
+                              visibleGuardianPhones.has(student.id)
+                                ? 'cursor-copy text-slate-700 hover:bg-lotus-50 hover:text-lotus-700'
+                                : 'cursor-default text-slate-500'
+                            }`}
+                            title={
+                              visibleGuardianPhones.has(student.id)
+                                ? 'Nhấn để sao chép số điện thoại'
+                                : undefined
+                            }
+                          >
+                            {copiedPhoneStudentId === student.id ? (
+                              <span className="inline-flex items-center gap-1.5 text-emerald-700">
+                                <Check aria-hidden="true" size={15} />
+                                Đã sao chép
+                              </span>
+                            ) : visibleGuardianPhones.has(student.id) ? (
+                              student.guardian.phoneNumber
+                            ) : (
+                              maskPhoneNumber(student.guardian.phoneNumber)
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => toggleGuardianPhone(student.id)}
+                            className="flex size-9 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-lotus-50 hover:text-lotus-700"
+                            aria-label={
+                              visibleGuardianPhones.has(student.id)
+                                ? `Ẩn số điện thoại người giám hộ của ${student.fullName}`
+                                : `Hiện số điện thoại người giám hộ của ${student.fullName}`
+                            }
+                            title={
+                              visibleGuardianPhones.has(student.id)
+                                ? 'Ẩn số điện thoại'
+                                : 'Hiện số điện thoại'
+                            }
+                          >
+                            {visibleGuardianPhones.has(student.id) ? (
+                              <EyeOff aria-hidden="true" size={18} />
+                            ) : (
+                              <Eye aria-hidden="true" size={18} />
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-slate-400">—</span>
+                      )}
+                    </td>
+
+                    <td className="px-5 py-4">
                       <span
                         className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[student.status]}`}
                       >
@@ -698,7 +828,7 @@ export function StudentsPage() {
                         <button
                           type="button"
                           disabled={deletingStudentId === student.id}
-                          onClick={() => removeStudent(student)}
+                          onClick={() => requestStudentDeletion(student)}
                           className="inline-flex size-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                           aria-label={`Xóa ${student.fullName}`}
                           title="Xóa học sinh"
@@ -734,6 +864,21 @@ export function StudentsPage() {
         errorMessage={saveStudentError}
         onClose={closeStudentForm}
         onSubmit={saveStudent} />
+
+      <ConfirmDialog
+        isOpen={Boolean(studentPendingDeletion)}
+        title="Xóa học sinh?"
+        description={
+          studentPendingDeletion
+            ? `Bạn sắp xóa “${studentPendingDeletion.fullName}”. Hồ sơ học sinh và lịch sử vắng học liên quan sẽ bị xóa vĩnh viễn.`
+            : ''
+        }
+        confirmLabel="Xóa học sinh"
+        isConfirming={Boolean(deletingStudentId)}
+        errorMessage={deleteStudentError}
+        onClose={closeDeleteDialog}
+        onConfirm={confirmStudentDeletion}
+      />
     </main>
   )
 }

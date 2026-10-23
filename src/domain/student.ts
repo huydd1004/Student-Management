@@ -25,6 +25,7 @@ export interface StudentDocument extends AuditFields {
   /** Đánh giá nội bộ của giáo viên chủ nhiệm để theo dõi quá trình học. */
   academicPerformance?: StudentAcademicPerformance;
   classDuty?: string;
+  permanentAddress?: string;
   guardian?: GuardianContact;
   joinedOn?: LocalDate;
   leftOn?: LocalDate;
