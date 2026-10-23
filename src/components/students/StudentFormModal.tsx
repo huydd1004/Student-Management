@@ -1,6 +1,7 @@
 import type { FormEvent } from 'react'
 import { X } from 'lucide-react'
 import { DateInput } from '../ui/DateInput'
+import { PartialDateInput } from '../ui/PartialDateInput'
 
 export type StudentFormValues = {
   fullName: string
@@ -158,7 +159,7 @@ export function StudentFormModal({
               <label className="text-sm font-medium text-slate-700">
                 Ngày sinh
 
-                <DateInput
+                <PartialDateInput
                   id="student-date-of-birth"
                   name="dateOfBirth"
                   defaultValue={initialValues.dateOfBirth ?? ''}

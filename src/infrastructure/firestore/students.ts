@@ -17,6 +17,7 @@ import { CLASSROOM_ID } from '../../config/classroom';
 import type {
   GuardianContact,
   LocalDate,
+  PartialLocalDate,
   StudentDocument,
   StudentAcademicPerformance,
   StudentGender,
@@ -30,7 +31,7 @@ import { firestorePaths } from './paths';
 export interface CreateStudentInput {
   studentCode: string;
   fullName: string;
-  dateOfBirth?: LocalDate;
+  dateOfBirth?: PartialLocalDate;
   gender: StudentGender;
   ethnicity?: string;
   group?: string;

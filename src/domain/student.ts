@@ -1,4 +1,4 @@
-import type { AuditFields, LocalDate } from './common';
+import type { AuditFields, LocalDate, PartialLocalDate } from './common';
 
 export type StudentGender = 'male' | 'female' | 'other' | 'unspecified';
 export type StudentStatus = 'active' | 'transferred' | 'inactive';
@@ -19,7 +19,7 @@ export interface StudentDocument extends AuditFields {
   fullName: string;
   /** Họ tên viết thường, bỏ dấu; chỉ dùng để tìm kiếm. */
   normalizedName: string;
-  dateOfBirth?: LocalDate;
+  dateOfBirth?: PartialLocalDate;
   gender: StudentGender;
   ethnicity?: string;
   group?: string;

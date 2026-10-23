@@ -38,7 +38,7 @@ import {
   type CreateStudentInput,
   type StudentListItem,
 } from '../infrastructure/firestore'
-import { formatLocalDateForDisplay } from '../utils/date'
+import { formatPartialDateForDisplay } from '../utils/date'
 
 type StudentStatusFilter = 'all' | StudentFormValues['status']
 
@@ -768,7 +768,7 @@ export function StudentsPage() {
 
                           <p className="mt-0.5 text-xs text-slate-500">
                             {student.dateOfBirth
-                              ? formatLocalDateForDisplay(
+                              ? formatPartialDateForDisplay(
                                   student.dateOfBirth,
                                 )
                               : 'Chưa có ngày sinh'}

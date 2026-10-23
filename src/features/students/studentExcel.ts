@@ -7,10 +7,12 @@ import writeXlsxFile, {
 import { CLASSROOM_CONFIG } from '../../config/classroom'
 import type {
   LocalDate,
+  PartialLocalDate,
   StudentAcademicPerformance,
   StudentGender,
   StudentStatus,
 } from '../../domain'
+import { formatPartialDateForDisplay } from '../../utils/date'
 import type {
   CreateStudentInput,
   StudentListItem,
@@ -107,7 +109,8 @@ function parseDateValue(
   rowNumber: number,
   fieldName: string,
   errors: string[],
-): LocalDate | undefined {
+  allowPartial = false,
+): LocalDate | PartialLocalDate | undefined {
   if (value === null || value === undefined || value === '') {
     return undefined
   }
@@ -121,6 +124,26 @@ function parseDateValue(
   }
 
   const text = readCell(value)
+
+  if (allowPartial) {
+    const yearMatch = /^(\d{4})$/.exec(text)
+    const isoMonthMatch = /^(\d{4})-(\d{2})$/.exec(text)
+    const vietnameseMonthMatch = /^(\d{1,2})\/(\d{4})$/.exec(text)
+
+    if (yearMatch) return yearMatch[1]
+
+    const partialYear = isoMonthMatch?.[1] ?? vietnameseMonthMatch?.[2]
+    const partialMonth = isoMonthMatch?.[2] ?? vietnameseMonthMatch?.[1]
+
+    if (partialYear && partialMonth) {
+      const monthNumber = Number(partialMonth)
+
+      if (monthNumber >= 1 && monthNumber <= 12) {
+        return `${partialYear}-${String(monthNumber).padStart(2, '0')}`
+      }
+    }
+  }
+
   const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text)
   const vietnameseMatch = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(
     text,
@@ -158,6 +181,18 @@ function toExcelDate(value?: LocalDate) {
 
   const [year, month, day] = value.split('-').map(Number)
   return new Date(Date.UTC(year, month - 1, day))
+}
+
+function createBirthDateCell(value?: PartialLocalDate) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value ?? '')) {
+    return createDataCell(toExcelDate(value), 'center', 'dd/mm/yyyy')
+  }
+
+  return createDataCell(
+    formatPartialDateForDisplay(value),
+    'center',
+    '@',
+  )
 }
 
 function createTitleRow(value: string, fontSize: number): Row {
@@ -223,7 +258,7 @@ export async function exportStudentsToExcel(
       createDataCell(index + 1, 'center', '0'),
       createDataCell(student.studentCode, 'left', '@'),
       createDataCell(student.fullName),
-      createDataCell(toExcelDate(student.dateOfBirth), 'center', 'dd/mm/yyyy'),
+      createBirthDateCell(student.dateOfBirth),
       createDataCell(genderLabels[student.gender], 'center'),
       createDataCell(student.ethnicity ?? '', 'center'),
       createDataCell(student.group ?? '', 'center'),
@@ -480,6 +515,7 @@ export async function parseStudentsFromExcel(
       rowNumber,
       'Ngày sinh',
       errors,
+      true,
     )
     const joinedOn = parseDateValue(
       row[column.joinedOn],
