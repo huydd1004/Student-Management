@@ -1,26 +1,29 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle,
   BookOpenCheck,
   CheckCircle2,
-  Dices,
   History,
   LoaderCircle,
-  RotateCcw,
   Save,
-  Users,
 } from 'lucide-react'
 import { Link } from 'react-router'
 
 import { useAuth } from '../auth/AuthProvider'
+import {
+  LessonCheckGames,
+  type LessonGameId,
+} from '../components/lesson-check/LessonCheckGames'
 import { DEFAULT_SUBJECTS } from '../data/default-subjects'
 import type { LessonCheckOutcome } from '../domain'
 import {
   createLessonCheckCall,
+  subscribeToAttendanceIncidents,
   subscribeToLessonCheckCalls,
   subscribeToStudents,
   updateLessonCheckCall,
   type LessonCheckCallListItem,
+  type AttendanceIncidentListItem,
   type StudentListItem,
 } from '../infrastructure/firestore'
 
@@ -85,10 +88,35 @@ function formatGroupName(value?: string) {
   return normalizedGroup ? `Tổ ${normalizedGroup}` : ''
 }
 
+function getTodayValue() {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function shuffleStudents(students: StudentListItem[]) {
+  const shuffledStudents = [...students]
+
+  for (let index = shuffledStudents.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1))
+    ;[shuffledStudents[index], shuffledStudents[randomIndex]] = [
+      shuffledStudents[randomIndex],
+      shuffledStudents[index],
+    ]
+  }
+
+  return shuffledStudents
+}
+
 export function LessonCheckPage() {
   const { user } = useAuth()
   const [students, setStudents] = useState<StudentListItem[]>([])
   const [calls, setCalls] = useState<LessonCheckCallListItem[]>([])
+  const [attendanceIncidents, setAttendanceIncidents] =
+    useState<AttendanceIncidentListItem[]>([])
   const [subjectId, setSubjectId] = useState('toan')
   const [group, setGroup] = useState('all')
   const [currentStudent, setCurrentStudent] =
@@ -102,13 +130,26 @@ export function LessonCheckPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [activeGame, setActiveGame] =
+    useState<LessonGameId>('lotus-wheel')
+  const [calledStudentIds, setCalledStudentIds] =
+    useState<Set<string>>(new Set())
+  const [raceProgress, setRaceProgress] = useState(0)
+  const [treasureProgress, setTreasureProgress] = useState(0)
+  const [currentCallGame, setCurrentCallGame] =
+    useState<LessonGameId>('lotus-wheel')
+  const isCallingRef = useRef(false)
+  const rewardedCallIds = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     let loadedStudents = false
     let loadedCalls = false
+    let loadedAttendance = false
 
     const finishLoading = () => {
-      if (loadedStudents && loadedCalls) setIsLoading(false)
+      if (loadedStudents && loadedCalls && loadedAttendance) {
+        setIsLoading(false)
+      }
     }
     const reportError = () => {
       setError(
@@ -132,10 +173,19 @@ export function LessonCheckPage() {
       },
       reportError,
     )
+    const unsubscribeAttendance = subscribeToAttendanceIncidents(
+      (nextIncidents) => {
+        setAttendanceIncidents(nextIncidents)
+        loadedAttendance = true
+        finishLoading()
+      },
+      reportError,
+    )
 
     return () => {
       unsubscribeStudents()
       unsubscribeCalls()
+      unsubscribeAttendance()
     }
   }, [])
 
@@ -143,46 +193,92 @@ export function LessonCheckPage() {
     () => students.filter((student) => student.status === 'active'),
     [students],
   )
+  const absentTodayStudentIds = useMemo(
+    () =>
+      new Set(
+        attendanceIncidents
+          .filter(
+            (incident) => incident.attendanceDate === getTodayValue(),
+          )
+          .map((incident) => incident.studentId),
+      ),
+    [attendanceIncidents],
+  )
+  const callableStudents = useMemo(
+    () =>
+      activeStudents.filter(
+        (student) => !absentTodayStudentIds.has(student.id),
+      ),
+    [absentTodayStudentIds, activeStudents],
+  )
   const groups = useMemo(
     () =>
       Array.from(
         new Set(
-          activeStudents
+          callableStudents
             .map((student) => normalizeGroupName(student.group))
             .filter((value): value is string => Boolean(value)),
         ),
       ).sort((first, second) => first.localeCompare(second, 'vi')),
-    [activeStudents],
+    [callableStudents],
   )
   const eligibleStudents = useMemo(
     () =>
-      activeStudents.filter(
+      callableStudents.filter(
         (student) =>
           group === 'all' ||
           normalizeGroupName(student.group) === group,
       ),
-    [activeStudents, group],
+    [callableStudents, group],
   )
   const selectedSubject =
     DEFAULT_SUBJECTS.find((subject) => subject.id === subjectId) ??
     DEFAULT_SUBJECTS[0]
 
-  async function callRandomStudent() {
-    if (!user || eligibleStudents.length === 0) return
+  const remainingStudentCount = eligibleStudents.filter(
+    (student) => !calledStudentIds.has(student.id),
+  ).length
 
+  async function drawStudents(
+    count: number,
+    delayMs = 0,
+  ): Promise<StudentListItem[]> {
+    if (!user || eligibleStudents.length === 0 || isCallingRef.current) {
+      return []
+    }
+
+    isCallingRef.current = true
     setIsCalling(true)
     setError('')
     setMessage('')
 
     try {
-      const pool =
-        eligibleStudents.length > 1 && currentStudent
-          ? eligibleStudents.filter(
-              (student) => student.id !== currentStudent.id,
-            )
-          : eligibleStudents
-      const selectedStudent =
-        pool[Math.floor(Math.random() * pool.length)]
+      let nextCalledStudentIds = new Set(calledStudentIds)
+      let pool = eligibleStudents.filter(
+        (student) => !nextCalledStudentIds.has(student.id),
+      )
+
+      if (pool.length < count) {
+        nextCalledStudentIds = new Set()
+        pool = eligibleStudents
+      }
+
+      const selectedStudents = shuffleStudents(pool).slice(0, count)
+      const selectedStudent = selectedStudents[0]
+
+      if (!selectedStudent) return []
+
+      if (activeGame === 'knowledge-race' && raceProgress >= 8) {
+        setRaceProgress(0)
+      }
+      if (activeGame === 'treasure-hunt' && treasureProgress >= 8) {
+        setTreasureProgress(0)
+      }
+
+      if (delayMs > 0) {
+        await new Promise((resolve) => window.setTimeout(resolve, delayMs))
+      }
+
       const callId = await createLessonCheckCall({
         studentId: selectedStudent.id,
         studentCode: selectedStudent.studentCode,
@@ -194,14 +290,31 @@ export function LessonCheckPage() {
 
       setCurrentStudent(selectedStudent)
       setCurrentCallId(callId)
+      setCurrentCallGame(activeGame)
       setOutcome('not_recorded')
       setNotes('')
+      selectedStudents.forEach((student) =>
+        nextCalledStudentIds.add(student.id),
+      )
+      setCalledStudentIds(nextCalledStudentIds)
       setMessage(`Đã chọn ${selectedStudent.fullName}.`)
+      return selectedStudents
     } catch {
       setError('Không thể lưu lượt gọi bài. Vui lòng thử lại.')
+      return []
     } finally {
+      isCallingRef.current = false
       setIsCalling(false)
     }
+  }
+
+  function resetCallCycle() {
+    setCalledStudentIds(new Set())
+    setCurrentStudent(null)
+    setCurrentCallId('')
+    setOutcome('not_recorded')
+    setNotes('')
+    setMessage('Đã bắt đầu một vòng gọi mới.')
   }
 
   async function saveResult(nextOutcome = outcome) {
@@ -221,6 +334,20 @@ export function LessonCheckPage() {
         notes,
         user.uid,
       )
+
+      if (
+        nextOutcome === 'completed' &&
+        !rewardedCallIds.current.has(currentCallId)
+      ) {
+        if (currentCallGame === 'knowledge-race') {
+          setRaceProgress((current) => Math.min(current + 1, 8))
+        }
+        if (currentCallGame === 'treasure-hunt') {
+          setTreasureProgress((current) => Math.min(current + 1, 8))
+        }
+        rewardedCallIds.current.add(currentCallId)
+      }
+
       setOutcome(nextOutcome)
       setMessage('Đã lưu kết quả gọi bài.')
     } catch {
@@ -238,8 +365,9 @@ export function LessonCheckPage() {
           Gọi kiểm tra bài cũ
         </h2>
         <p className="mt-2 max-w-3xl leading-7 text-slate-600">
-          Chọn môn học và tổ, sau đó hệ thống sẽ gọi ngẫu nhiên một học sinh.
-          Mỗi lượt gọi và kết quả đều được lưu vào lịch sử.
+          Chọn môn học, phạm vi và một trong sáu trò chơi để tạo không khí
+          nhẹ nhàng khi kiểm tra bài cũ. Mỗi lượt gọi và kết quả vẫn được lưu
+          vào lịch sử.
         </p>
       </section>
 
@@ -285,7 +413,7 @@ export function LessonCheckPage() {
                 onChange={(event) => setGroup(event.target.value)}
                 className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-slate-900 outline-none transition focus:border-lotus-400"
               >
-                <option value="all">Cả lớp ({activeStudents.length})</option>
+                <option value="all">Cả lớp ({callableStudents.length})</option>
                 {groups.map((groupName) => (
                   <option key={groupName} value={groupName}>
                     {formatGroupName(groupName)}
@@ -295,72 +423,44 @@ export function LessonCheckPage() {
             </label>
           </div>
 
-          <div className="mt-6 flex min-h-72 flex-col items-center justify-center rounded-3xl border border-dashed border-pink-300 bg-lotus-50/50 p-6 text-center">
-            {isLoading ? (
+          {isLoading ? (
+            <div className="mt-6 flex min-h-56 items-center justify-center rounded-3xl border border-dashed border-pink-300 bg-lotus-50/50">
               <LoaderCircle className="animate-spin text-lotus-600" size={36} />
-            ) : currentStudent ? (
-              <>
-                <div className="flex size-16 items-center justify-center rounded-2xl bg-lotus-600 text-2xl font-bold text-white shadow-lg shadow-lotus-200/50">
-                  {currentStudent.fullName.trim().charAt(0).toUpperCase()}
-                </div>
-                <p className="mt-4 text-sm font-semibold text-lotus-600">
-                  {selectedSubject.name}
-                </p>
-                <h3 className="mt-2 text-3xl font-bold text-slate-900">
-                  {currentStudent.fullName}
-                </h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  {currentStudent.studentCode}
-                  {currentStudent.group
-                    ? ` · ${formatGroupName(currentStudent.group)}`
-                    : ''}
-                </p>
-              </>
-            ) : eligibleStudents.length > 0 ? (
-              <>
-                <Dices className="text-lotus-600" size={46} />
-                <h3 className="mt-4 text-xl font-bold text-slate-900">
-                  Sẵn sàng gọi bài
-                </h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  Có {eligibleStudents.length} học sinh trong phạm vi đã chọn.
-                </p>
-              </>
-            ) : (
-              <>
-                <Users className="text-slate-400" size={44} />
-                <h3 className="mt-4 text-lg font-bold text-slate-900">
-                  Chưa có học sinh phù hợp
-                </h3>
-                <Link
-                  to="/students"
-                  className="mt-3 text-sm font-semibold text-lotus-700 hover:underline"
-                >
-                  Mở danh sách học sinh
-                </Link>
-              </>
-            )}
-          </div>
-
-          <button
-            type="button"
-            disabled={isLoading || isCalling || eligibleStudents.length === 0}
-            onClick={() => void callRandomStudent()}
-            className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-lotus-600 px-5 font-semibold text-white transition hover:bg-lotus-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isCalling ? (
-              <LoaderCircle className="animate-spin" size={20} />
-            ) : currentStudent ? (
-              <RotateCcw size={20} />
-            ) : (
-              <Dices size={20} />
-            )}
-            {isCalling
-              ? 'Đang chọn...'
-              : currentStudent
-                ? 'Gọi học sinh khác'
-                : 'Gọi ngẫu nhiên'}
-          </button>
+            </div>
+          ) : eligibleStudents.length > 0 ? (
+            <LessonCheckGames
+              activeGame={activeGame}
+              eligibleStudents={eligibleStudents}
+              currentStudent={currentStudent}
+              selectionMeta={`${selectedSubject.name}${
+                currentStudent?.group
+                  ? ` · ${formatGroupName(currentStudent.group)}`
+                  : ''
+              }`}
+              isCalling={isCalling}
+              remainingCount={remainingStudentCount}
+              raceProgress={raceProgress}
+              treasureProgress={treasureProgress}
+              onGameChange={setActiveGame}
+              onDrawStudents={drawStudents}
+              onResetCycle={resetCallCycle}
+            />
+          ) : (
+            <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+              <h3 className="text-lg font-bold text-slate-900">
+                Chưa có học sinh phù hợp
+              </h3>
+              <p className="mt-2 text-sm text-slate-500">
+                Học sinh vắng hôm nay và hồ sơ đã ngừng học sẽ không được gọi.
+              </p>
+              <Link
+                to="/students"
+                className="mt-3 inline-block text-sm font-semibold text-lotus-700 hover:underline"
+              >
+                Mở danh sách học sinh
+              </Link>
+            </div>
+          )}
 
           {currentStudent ? (
             <div className="mt-6 border-t border-slate-200 pt-6">

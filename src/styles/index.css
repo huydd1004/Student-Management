@@ -67,6 +67,15 @@ input[type="date"] {
   color: #ad1457;
 }
 
+.lesson-game-stage {
+  background-image: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #fff1f6 52%,
+    #fdf2f8 100%
+  );
+}
+
 /*
  * Lớp tương thích màu tối cho các màn hình đã có. Các màu trạng thái vẫn
  * được giữ riêng để người dùng nhận biết nhanh học sinh vắng, đi muộn và
@@ -104,6 +113,15 @@ html.dark body {
     135deg,
     #101827 0%,
     #2a1422 100%
+  );
+}
+
+.dark .lesson-game-stage {
+  background-image: linear-gradient(
+    135deg,
+    #101827 0%,
+    #25101c 52%,
+    #111827 100%
   );
 }
 
@@ -150,6 +168,14 @@ html.dark body {
   background-color: #082f49;
 }
 
+.dark .bg-purple-50 {
+  background-color: #2e1065;
+}
+
+.dark .bg-rose-50 {
+  background-color: #3f101f;
+}
+
 .dark .text-slate-900,
 .dark .text-slate-800 {
   color: #f4f7fb;
@@ -190,6 +216,29 @@ html.dark body {
   color: #7dd3fc;
 }
 
+.dark .text-sky-600,
+.dark .text-sky-800 {
+  color: #7dd3fc;
+}
+
+.dark .text-purple-700,
+.dark .text-purple-800 {
+  color: #d8b4fe;
+}
+
+.dark .text-rose-600,
+.dark .text-rose-700 {
+  color: #fda4af;
+}
+
+.dark .text-amber-800 {
+  color: #fde68a;
+}
+
+.dark .text-emerald-600 {
+  color: #6ee7b7;
+}
+
 .dark .border-white,
 .dark .border-white\/80,
 .dark .border-slate-100,
@@ -219,6 +268,24 @@ html.dark body {
 
 .dark .border-sky-200 {
   border-color: #075985;
+}
+
+.dark .border-sky-300 {
+  border-color: #0369a1;
+}
+
+.dark .border-purple-200,
+.dark .border-violet-300 {
+  border-color: #6b21a8;
+}
+
+.dark .border-orange-300 {
+  border-color: #a16207;
+}
+
+.dark .border-rose-200,
+.dark .border-rose-300 {
+  border-color: #9f1239;
 }
 
 .dark .divide-slate-100 > :not(:last-child) {
