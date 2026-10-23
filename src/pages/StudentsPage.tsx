@@ -38,6 +38,7 @@ import {
   type CreateStudentInput,
   type StudentListItem,
 } from '../infrastructure/firestore'
+import { formatLocalDateForDisplay } from '../utils/date'
 
 type StudentStatusFilter = 'all' | StudentFormValues['status']
 
@@ -614,7 +615,7 @@ export function StudentsPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1160px] border-collapse">
+          <table className="w-full min-w-[1020px] border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/80">
                 <th className="w-20 px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -623,10 +624,6 @@ export function StudentsPage() {
 
                 <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Họ và tên
-                </th>
-
-                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Mã học sinh
                 </th>
 
                 <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -654,7 +651,7 @@ export function StudentsPage() {
             <tbody>
               {isStudentsLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-16">
+                  <td colSpan={7} className="px-5 py-16">
                     <div
                       role="status"
                       className="flex items-center justify-center gap-3 text-sm font-medium text-lotus-700"
@@ -670,7 +667,7 @@ export function StudentsPage() {
                 </tr>
               ) : studentsError ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-16">
+                  <td colSpan={7} className="px-5 py-16">
                     <div
                       role="alert"
                       className="mx-auto flex max-w-md flex-col items-center text-center"
@@ -690,7 +687,7 @@ export function StudentsPage() {
                 </tr>
               ) : filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-16">
+                  <td colSpan={7} className="px-5 py-16">
                     <div className="mx-auto flex max-w-md flex-col items-center text-center">
                       <div className="flex size-16 items-center justify-center rounded-2xl bg-lotus-50 text-lotus-700">
                         <UsersRound
@@ -767,7 +764,11 @@ export function StudentsPage() {
                           </div>
 
                           <p className="mt-0.5 text-xs text-slate-500">
-                            {student.dateOfBirth || 'Chưa có ngày sinh'}
+                            {student.dateOfBirth
+                              ? formatLocalDateForDisplay(
+                                  student.dateOfBirth,
+                                )
+                              : 'Chưa có ngày sinh'}
                           </p>
 
                           {student.difficultCircumstances ? (
@@ -784,10 +785,6 @@ export function StudentsPage() {
                           ) : null}
                         </div>
                       </div>
-                    </td>
-
-                    <td className="px-5 py-4 text-sm font-medium text-slate-700">
-                      {student.studentCode}
                     </td>
 
                     <td className="px-5 py-4 text-sm text-slate-600">

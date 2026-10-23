@@ -5,7 +5,6 @@ import {
   doc,
   getDocs,
   onSnapshot,
-  orderBy,
   query,
   serverTimestamp,
   setDoc,
@@ -25,6 +24,7 @@ import type {
   WithId,
 } from '../../domain';
 import { db } from '../firebase';
+import { compareVietnameseNames } from '../../utils/vietnameseName';
 import { firestorePaths } from './paths';
 
 export interface CreateStudentInput {
@@ -388,22 +388,19 @@ export function subscribeToStudents(
   const studentsPath =
     firestorePaths.students(CLASSROOM_ID);
 
-  const studentsQuery = query(
-    collection(db, studentsPath),
-    orderBy('fullName'),
-  );
-
   return onSnapshot(
-    studentsQuery,
+    collection(db, studentsPath),
     (snapshot) => {
-      const students = snapshot.docs.map(
-        (studentSnapshot) => ({
+      const students = snapshot.docs
+        .map((studentSnapshot) => ({
           ...(
             studentSnapshot.data() as StudentDocument
           ),
           id: studentSnapshot.id,
-        }),
-      );
+        }))
+        .sort((first, second) =>
+          compareVietnameseNames(first.fullName, second.fullName),
+        );
 
       onStudentsChange(students);
     },

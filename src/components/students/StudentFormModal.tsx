@@ -1,5 +1,6 @@
 import type { FormEvent } from 'react'
 import { X } from 'lucide-react'
+import { DateInput } from '../ui/DateInput'
 
 export type StudentFormValues = {
   studentCode: string
@@ -172,11 +173,10 @@ export function StudentFormModal({
               <label className="text-sm font-medium text-slate-700">
                 Ngày sinh
 
-                <input
+                <DateInput
+                  id="student-date-of-birth"
                   name="dateOfBirth"
-                  type="date"
                   defaultValue={initialValues.dateOfBirth ?? ''}
-                  className={inputClassName}
                 />
               </label>
 
@@ -252,11 +252,10 @@ export function StudentFormModal({
               <label className="text-sm font-medium text-slate-700">
                 Ngày vào lớp
 
-                <input
+                <DateInput
+                  id="student-joined-on"
                   name="joinedOn"
-                  type="date"
                   defaultValue={initialValues.joinedOn ?? ''}
-                  className={inputClassName}
                 />
               </label>
 

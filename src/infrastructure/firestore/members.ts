@@ -13,6 +13,7 @@ import type {
   WithId,
 } from '../../domain'
 import { db } from '../firebase'
+import { compareVietnameseNames } from '../../utils/vietnameseName'
 import { firestorePaths } from './paths'
 
 export type ClassMemberListItem = WithId<ClassMemberDocument>
@@ -30,9 +31,9 @@ export function subscribeToMembers(
           id: memberSnapshot.id,
         }))
         .sort((first, second) =>
-          first.displayName.localeCompare(
+          compareVietnameseNames(
+            first.displayName,
             second.displayName,
-            'vi',
           ),
         )
 

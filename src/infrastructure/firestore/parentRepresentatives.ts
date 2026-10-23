@@ -14,6 +14,7 @@ import type {
   WithId,
 } from '../../domain'
 import { db } from '../firebase'
+import { compareVietnameseNames } from '../../utils/vietnameseName'
 import { firestorePaths } from './paths'
 
 export interface ParentRepresentativeInput {
@@ -115,7 +116,7 @@ export function subscribeToParentRepresentatives(
           id: representativeSnapshot.id,
         }))
         .sort((first, second) =>
-          first.fullName.localeCompare(second.fullName, 'vi'),
+          compareVietnameseNames(first.fullName, second.fullName),
         )
 
       onRepresentativesChange(representatives)

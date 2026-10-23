@@ -304,7 +304,7 @@ export function ParentRepresentativesPage() {
                           className="mt-1 shrink-0 text-slate-400"
                           size={15}
                         />
-                        {representative.address}
+                        {representative.address || 'Chưa cập nhật'}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-right">

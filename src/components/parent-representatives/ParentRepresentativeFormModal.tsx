@@ -133,13 +133,12 @@ export function ParentRepresentativeFormModal({
             </label>
 
             <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-              Địa chỉ <span className="text-red-500">*</span>
+              Địa chỉ
               <textarea
                 name="address"
                 rows={3}
-                required
                 defaultValue={initialValues.address ?? ''}
-                placeholder="Nhập địa chỉ"
+                placeholder="Nhập địa chỉ nếu cần"
                 className="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-lotus-400 focus:ring-4 focus:ring-pink-100"
               />
             </label>

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   AlertTriangle,
-  CalendarDays,
   History,
   LoaderCircle,
   Save,
@@ -12,6 +11,7 @@ import {
 } from 'lucide-react'
 
 import { useAuth } from '../auth/AuthProvider'
+import { DateInput } from '../components/ui/DateInput'
 import type {
   AttendancePeriod,
   AttendanceStatus,
@@ -25,6 +25,7 @@ import {
   type SaveAttendanceInput,
   type StudentListItem,
 } from '../infrastructure/firestore'
+import { formatLocalDateForDisplay } from '../utils/date'
 
 type AttendanceDraft = {
   status: AttendanceStatus
@@ -52,11 +53,7 @@ function getEarliestAttendanceDate() {
 }
 
 function formatDisplayDate(value: string) {
-  const [year, month, day] = value.split('-').map(Number)
-
-  return new Intl.DateTimeFormat('vi-VN').format(
-    new Date(year, month - 1, day),
-  )
+  return formatLocalDateForDisplay(value)
 }
 
 const periodOptions = [
@@ -128,6 +125,8 @@ export function AttendancePage() {
   const { user } = useAuth()
   const [attendanceDate, setAttendanceDate] =
     useState(getTodayValue)
+  const [isAttendanceDateValid, setIsAttendanceDateValid] =
+    useState(true)
   const [period, setPeriod] =
     useState<AttendancePeriod>('morning')
   const [students, setStudents] =
@@ -429,23 +428,15 @@ export function AttendancePage() {
             Ngày điểm danh
           </label>
 
-          <div className="relative mt-2 min-w-0 max-w-full overflow-hidden">
-            <CalendarDays
-              aria-hidden="true"
-              size={19}
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-lotus-600"
-            />
-
-            <input
+          <div className="min-w-0 max-w-full">
+            <DateInput
               id="attendance-date"
-              type="date"
+              required
               min={getEarliestAttendanceDate()}
               max={getTodayValue()}
               value={attendanceDate}
-              onChange={(event) =>
-                setAttendanceDate(event.target.value)
-              }
-              className="block h-12 w-full min-w-0 max-w-full rounded-xl border border-slate-200 bg-white pl-11 pr-3 text-sm font-medium text-slate-800 outline-none transition focus:border-lotus-400 focus:ring-4 focus:ring-pink-100"
+              onChange={setAttendanceDate}
+              onValidityChange={setIsAttendanceDateValid}
             />
           </div>
         </div>
@@ -564,6 +555,7 @@ export function AttendancePage() {
               onClick={handleSaveAttendance}
               disabled={
                 isSaving ||
+                !isAttendanceDateValid ||
                 isStudentsLoading ||
                 isHistoryLoading ||
                 activeStudents.length === 0
