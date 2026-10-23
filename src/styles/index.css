@@ -283,3 +283,57 @@ html.dark body {
   background: #be185d;
   color: #ffffff;
 }
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .math-print-area,
+  .math-print-area * {
+    visibility: visible !important;
+  }
+
+  .math-print-area {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    border: 0 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+  }
+
+  .math-screen-only {
+    display: none !important;
+  }
+
+  .math-solution {
+    display: none !important;
+  }
+
+  .math-print-solutions .math-solution {
+    display: block !important;
+  }
+
+  .math-question {
+    break-inside: avoid;
+    border-color: #cbd5e1 !important;
+  }
+
+  .math-print-area,
+  .math-print-area .text-slate-900,
+  .math-print-area .text-slate-800,
+  .math-print-area .text-slate-700,
+  .math-print-area .text-slate-600 {
+    color: #0f172a !important;
+  }
+}

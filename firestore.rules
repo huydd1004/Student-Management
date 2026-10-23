@@ -65,6 +65,41 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
     }
 
+    function validMathExerciseSet(classId) {
+      return request.resource.data.keys().hasOnly([
+          'title',
+          'semester',
+          'topicId',
+          'topicLabel',
+          'difficulty',
+          'questionCount',
+          'questions',
+          'signature',
+          'createdAt',
+          'createdBy',
+          'createdByName'
+        ])
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdByName
+          == get(/databases/$(database)/documents/classes/$(classId)/members/$(request.auth.uid)).data.displayName
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && request.resource.data.semester in ['semester_1', 'semester_2']
+        && request.resource.data.topicId is string
+        && request.resource.data.topicLabel is string
+        && request.resource.data.difficulty in ['basic', 'applied']
+        && request.resource.data.questionCount is int
+        && request.resource.data.questionCount >= 1
+        && request.resource.data.questionCount <= 15
+        && request.resource.data.questions is list
+        && request.resource.data.questions.size()
+          == request.resource.data.questionCount
+        && request.resource.data.signature is string
+        && request.resource.data.signature.size() > 0
+        && request.resource.data.createdAt == request.time;
+    }
+
     match /classes/{classId} {
       allow read: if isActiveAdmin(classId);
       allow create: if false;
@@ -117,6 +152,13 @@ service cloud.firestore {
         allow read: if isActiveAdmin(classId);
         allow create: if isActiveAdmin(classId)
           && validChatMessage(classId);
+        allow update, delete: if false;
+      }
+
+      match /mathExerciseSets/{exerciseSetId} {
+        allow read: if isActiveAdmin(classId);
+        allow create: if isActiveAdmin(classId)
+          && validMathExerciseSet(classId);
         allow update, delete: if false;
       }
 

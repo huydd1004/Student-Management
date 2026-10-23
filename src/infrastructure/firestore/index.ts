@@ -5,3 +5,4 @@ export * from './students';
 export * from './lessonCheck';
 export * from './members';
 export * from './chat';
+export * from './mathExercises';

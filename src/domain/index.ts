@@ -4,6 +4,7 @@ export * from './classroom';
 export * from './chat-message';
 export * from './common';
 export * from './lesson-check';
+export * from './math-exercise';
 export * from './member';
 export * from './student';
 export * from './subject';

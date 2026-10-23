@@ -1,4 +1,9 @@
-import { ArrowRight, ClipboardCheck, Dices } from 'lucide-react'
+import {
+  ArrowRight,
+  BookOpenCheck,
+  ClipboardCheck,
+  Dices,
+} from 'lucide-react'
 import { Link } from 'react-router'
 
 const quickActions = [
@@ -31,6 +36,20 @@ const quickActions = [
     buttonClass:
       'border border-pink-200 bg-white text-lotus-700 hover:bg-lotus-50 focus-visible:outline-lotus-600',
   },
+  {
+    title: 'Bài tập Toán lớp 5',
+    description:
+      'Tạo đề theo học kỳ, dạng bài và xem lời giải chi tiết ngay trong kho đề chung.',
+    status: 'Có lời giải',
+    buttonLabel: 'Tạo đề Toán',
+    icon: BookOpenCheck,
+    to: '/math-exercises',
+    cardClass: 'border-slate-200 bg-white',
+    iconClass: 'bg-lotus-50 text-lotus-700',
+    statusClass: 'bg-sky-50 text-sky-700',
+    buttonClass:
+      'border border-pink-200 bg-white text-lotus-700 hover:bg-lotus-50 focus-visible:outline-lotus-600',
+  },
 ]
 
 export function QuickActions() {
@@ -49,7 +68,7 @@ export function QuickActions() {
         </p>
       </div>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {quickActions.map(
           ({
             title,

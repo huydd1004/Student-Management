@@ -6,6 +6,7 @@ import { StudentsPage } from '../pages/StudentsPage'
 import { LessonCheckPage } from '../pages/LessonCheckPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { ChatPage } from '../pages/ChatPage'
+import { MathExercisesPage } from '../pages/MathExercisesPage'
 import { useAuth } from '../auth/AuthProvider';
 import { LoginPage } from '../pages/LoginPage';
 import { AccessDeniedPage } from '../pages/AccessDeniedPage';
@@ -63,6 +64,11 @@ if (accessStatus === 'unauthorized' || accessStatus === 'error') {
         />
 
         <Route path="chat" element={<ChatPage />} />
+
+        <Route
+          path="math-exercises"
+          element={<MathExercisesPage />}
+        />
 
         <Route
           path="settings"

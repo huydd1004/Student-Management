@@ -1,4 +1,5 @@
 import {
+  BookOpenCheck,
   ClipboardCheck,
   Dices,
   LayoutDashboard,
@@ -44,6 +45,11 @@ const navigationItems = [
     label: 'Gọi bài',
     icon: Dices,
     to: '/lesson-check',
+  },
+  {
+    label: 'Bài tập Toán',
+    icon: BookOpenCheck,
+    to: '/math-exercises',
   },
   {
     label: 'Trao đổi',
