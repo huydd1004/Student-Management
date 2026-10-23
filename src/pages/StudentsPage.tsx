@@ -94,12 +94,21 @@ function toCreateStudentInput(
       values.guardianRelationship ||
       values.guardianPhone,
   )
+  const hasSecondaryGuardianInformation = Boolean(
+    values.secondaryGuardianName ||
+      values.secondaryGuardianRelationship ||
+      values.secondaryGuardianPhone,
+  )
 
   return {
     studentCode: values.studentCode,
     fullName: values.fullName,
     gender: values.gender,
     status: values.status,
+
+    ...(values.ethnicity
+      ? { ethnicity: values.ethnicity }
+      : {}),
 
     ...(values.academicPerformance
       ? {
@@ -122,6 +131,13 @@ function toCreateStudentInput(
       ? { permanentAddress: values.permanentAddress }
       : {}),
 
+    ...(values.difficultCircumstances
+      ? {
+          difficultCircumstances:
+            values.difficultCircumstances,
+        }
+      : {}),
+
     ...(values.joinedOn
       ? { joinedOn: values.joinedOn }
       : {}),
@@ -137,6 +153,17 @@ function toCreateStudentInput(
           },
         }
       : {}),
+
+    ...(hasSecondaryGuardianInformation
+      ? {
+          secondaryGuardian: {
+            fullName: values.secondaryGuardianName,
+            relationship:
+              values.secondaryGuardianRelationship,
+            phoneNumber: values.secondaryGuardianPhone,
+          },
+        }
+      : {}),
   }
 }
 
@@ -148,16 +175,25 @@ function toStudentFormValues(
     fullName: student.fullName,
     dateOfBirth: student.dateOfBirth ?? '',
     gender: student.gender,
+    ethnicity: student.ethnicity ?? '',
     group: student.group ?? '',
     academicPerformance:
       student.academicPerformance ?? '',
     classDuty: student.classDuty ?? '',
     permanentAddress: student.permanentAddress ?? '',
+    difficultCircumstances:
+      student.difficultCircumstances ?? '',
     joinedOn: student.joinedOn ?? '',
     status: student.status,
     guardianName: student.guardian?.fullName ?? '',
     guardianRelationship: student.guardian?.relationship ?? '',
     guardianPhone: student.guardian?.phoneNumber ?? '',
+    secondaryGuardianName:
+      student.secondaryGuardian?.fullName ?? '',
+    secondaryGuardianRelationship:
+      student.secondaryGuardian?.relationship ?? '',
+    secondaryGuardianPhone:
+      student.secondaryGuardian?.phoneNumber ?? '',
     notes: student.notes ?? '',
   }
 }
@@ -695,7 +731,11 @@ export function StudentsPage() {
                 filteredStudents.map((student, index) => (
                   <tr
                     key={student.id}
-                    className="border-b border-slate-100 transition last:border-b-0 hover:bg-slate-50/70"
+                    className={`border-b border-slate-100 transition last:border-b-0 ${
+                      student.classDuty
+                        ? 'bg-lotus-50/50 hover:bg-lotus-50/70'
+                        : 'hover:bg-slate-50/70'
+                    }`}
                   >
                     <td className="px-5 py-4 text-sm text-slate-500">
                       {index + 1}
@@ -707,14 +747,41 @@ export function StudentsPage() {
                           {student.fullName.charAt(0).toUpperCase()}
                         </div>
 
-                        <div>
-                          <p className="font-semibold text-slate-900">
-                            {student.fullName}
-                          </p>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p
+                              className={`font-semibold ${
+                                student.classDuty
+                                  ? 'text-lotus-700'
+                                  : 'text-slate-900'
+                              }`}
+                            >
+                              {student.fullName}
+                            </p>
+
+                            {student.classDuty ? (
+                              <span className="inline-flex rounded-full bg-lotus-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+                                {student.classDuty}
+                              </span>
+                            ) : null}
+                          </div>
 
                           <p className="mt-0.5 text-xs text-slate-500">
                             {student.dateOfBirth || 'Chưa có ngày sinh'}
                           </p>
+
+                          {student.difficultCircumstances ? (
+                            <span
+                              className="mt-2 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700"
+                              title={student.difficultCircumstances}
+                            >
+                              <AlertTriangle
+                                aria-hidden="true"
+                                size={12}
+                              />
+                              Hoàn cảnh khó khăn
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                     </td>
@@ -870,7 +937,7 @@ export function StudentsPage() {
         title="Xóa học sinh?"
         description={
           studentPendingDeletion
-            ? `Bạn sắp xóa “${studentPendingDeletion.fullName}”. Hồ sơ học sinh và lịch sử vắng học liên quan sẽ bị xóa vĩnh viễn.`
+            ? `Bạn sắp xóa “${studentPendingDeletion.fullName}” khỏi danh sách lớp. Thao tác này không thể hoàn tác.`
             : ''
         }
         confirmLabel="Xóa học sinh"

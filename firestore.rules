@@ -100,6 +100,33 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
     }
 
+    function validParentRepresentative() {
+      return request.resource.data.keys().hasOnly([
+          'fullName',
+          'address',
+          'phoneNumber',
+          'position',
+          'createdAt',
+          'createdBy',
+          'updatedAt',
+          'updatedBy'
+        ])
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() > 0
+        && request.resource.data.fullName.size() <= 150
+        && request.resource.data.address is string
+        && request.resource.data.address.size() > 0
+        && request.resource.data.address.size() <= 500
+        && request.resource.data.phoneNumber is string
+        && request.resource.data.phoneNumber.size() > 0
+        && request.resource.data.phoneNumber.size() <= 30
+        && request.resource.data.position is string
+        && request.resource.data.position.size() > 0
+        && request.resource.data.position.size() <= 100
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.updatedAt == request.time;
+    }
+
     match /classes/{classId} {
       allow read: if isActiveAdmin(classId);
       allow create: if false;
@@ -160,6 +187,19 @@ service cloud.firestore {
         allow create: if isActiveAdmin(classId)
           && validMathExerciseSet(classId);
         allow update, delete: if false;
+      }
+
+      match /parentRepresentatives/{representativeId} {
+        allow read: if isActiveAdmin(classId);
+        allow create: if isActiveAdmin(classId)
+          && validParentRepresentative()
+          && request.resource.data.createdBy == request.auth.uid
+          && request.resource.data.createdAt == request.time;
+        allow update: if isActiveAdmin(classId)
+          && validParentRepresentative()
+          && request.resource.data.createdBy == resource.data.createdBy
+          && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if isActiveAdmin(classId);
       }
 
       match /activityLogs/{logId} {

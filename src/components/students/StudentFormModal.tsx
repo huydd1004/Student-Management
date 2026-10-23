@@ -6,15 +6,20 @@ export type StudentFormValues = {
   fullName: string
   dateOfBirth: string
   gender: 'male' | 'female' | 'other' | 'unspecified'
+  ethnicity: string
   group: string
   academicPerformance: '' | 'weak' | 'average' | 'good' | 'excellent'
   classDuty: string
   permanentAddress: string
+  difficultCircumstances: string
   joinedOn: string
   status: 'active' | 'transferred' | 'inactive'
   guardianName: string
   guardianRelationship: string
   guardianPhone: string
+  secondaryGuardianName: string
+  secondaryGuardianRelationship: string
+  secondaryGuardianPhone: string
   notes: string
 }
 
@@ -58,17 +63,24 @@ export function StudentFormModal({
       fullName: readValue('fullName'),
       dateOfBirth: readValue('dateOfBirth'),
       gender: readValue('gender') as StudentFormValues['gender'],
+      ethnicity: readValue('ethnicity'),
       group: readValue('group'),
       academicPerformance: readValue(
         'academicPerformance',
       ) as StudentFormValues['academicPerformance'],
       classDuty: readValue('classDuty'),
       permanentAddress: readValue('permanentAddress'),
+      difficultCircumstances: readValue('difficultCircumstances'),
       joinedOn: readValue('joinedOn'),
       status: readValue('status') as StudentFormValues['status'],
       guardianName: readValue('guardianName'),
       guardianRelationship: readValue('guardianRelationship'),
       guardianPhone: readValue('guardianPhone'),
+      secondaryGuardianName: readValue('secondaryGuardianName'),
+      secondaryGuardianRelationship: readValue(
+        'secondaryGuardianRelationship',
+      ),
+      secondaryGuardianPhone: readValue('secondaryGuardianPhone'),
       notes: readValue('notes'),
     })
   }
@@ -184,6 +196,18 @@ export function StudentFormModal({
               </label>
 
               <label className="text-sm font-medium text-slate-700">
+                Dân tộc
+
+                <input
+                  name="ethnicity"
+                  type="text"
+                  defaultValue={initialValues.ethnicity ?? ''}
+                  placeholder="Ví dụ: Kinh"
+                  className={inputClassName}
+                />
+              </label>
+
+              <label className="text-sm font-medium text-slate-700">
                 Tổ
 
                 <input
@@ -263,27 +287,45 @@ export function StudentFormModal({
                   className="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-lotus-400 focus:ring-4 focus:ring-pink-100"
                 />
               </label>
+
+              <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                Hoàn cảnh khó khăn
+
+                <textarea
+                  name="difficultCircumstances"
+                  rows={3}
+                  defaultValue={
+                    initialValues.difficultCircumstances ?? ''
+                  }
+                  placeholder="Để trống nếu học sinh không có hoàn cảnh cần lưu ý"
+                  className="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-lotus-400 focus:ring-4 focus:ring-pink-100"
+                />
+              </label>
             </div>
           </section>
 
           <section className="mt-8 border-t border-slate-200 pt-6">
             <h3 className="text-base font-bold text-slate-900">
-              Thông tin phụ huynh
+              Thông tin người giám hộ
             </h3>
 
             <p className="mt-1 text-sm text-slate-500">
-              Chỉ nhập những thông tin thực sự cần thiết.
+              Người giám hộ thứ nhất được dùng làm liên hệ chính trong danh sách.
             </p>
 
-            <div className="mt-5 grid gap-5 sm:grid-cols-2">
+            <h4 className="mt-5 text-sm font-bold text-lotus-700">
+              Người giám hộ 1 · Liên hệ chính
+            </h4>
+
+            <div className="mt-3 grid gap-5 sm:grid-cols-2">
               <label className="text-sm font-medium text-slate-700">
-                Họ tên phụ huynh
+                Họ và tên
 
                 <input
                   name="guardianName"
                   type="text"
                   defaultValue={initialValues.guardianName ?? ''}
-                  placeholder="Nhập họ tên phụ huynh"
+                  placeholder="Nhập họ tên người giám hộ"
                   className={inputClassName}
                 />
               </label>
@@ -312,6 +354,57 @@ export function StudentFormModal({
                   className={inputClassName}
                 />
               </label>
+            </div>
+
+            <div className="mt-6 border-t border-slate-200 pt-5">
+              <h4 className="text-sm font-bold text-slate-700">
+                Người giám hộ 2 · Liên hệ dự phòng
+              </h4>
+
+              <div className="mt-3 grid gap-5 sm:grid-cols-2">
+                <label className="text-sm font-medium text-slate-700">
+                  Họ và tên
+
+                  <input
+                    name="secondaryGuardianName"
+                    type="text"
+                    defaultValue={
+                      initialValues.secondaryGuardianName ?? ''
+                    }
+                    placeholder="Nhập họ tên người giám hộ"
+                    className={inputClassName}
+                  />
+                </label>
+
+                <label className="text-sm font-medium text-slate-700">
+                  Quan hệ với học sinh
+
+                  <input
+                    name="secondaryGuardianRelationship"
+                    type="text"
+                    defaultValue={
+                      initialValues.secondaryGuardianRelationship ?? ''
+                    }
+                    placeholder="Ví dụ: Bố"
+                    className={inputClassName}
+                  />
+                </label>
+
+                <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                  Số điện thoại dự phòng
+
+                  <input
+                    name="secondaryGuardianPhone"
+                    type="tel"
+                    inputMode="tel"
+                    defaultValue={
+                      initialValues.secondaryGuardianPhone ?? ''
+                    }
+                    placeholder="Nhập số điện thoại dự phòng"
+                    className={inputClassName}
+                  />
+                </label>
+              </div>
             </div>
           </section>
 

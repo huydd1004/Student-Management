@@ -21,12 +21,15 @@ export interface StudentDocument extends AuditFields {
   normalizedName: string;
   dateOfBirth?: LocalDate;
   gender: StudentGender;
+  ethnicity?: string;
   group?: string;
   /** Đánh giá nội bộ của giáo viên chủ nhiệm để theo dõi quá trình học. */
   academicPerformance?: StudentAcademicPerformance;
   classDuty?: string;
   permanentAddress?: string;
+  difficultCircumstances?: string;
   guardian?: GuardianContact;
+  secondaryGuardian?: GuardianContact;
   joinedOn?: LocalDate;
   leftOn?: LocalDate;
   status: StudentStatus;

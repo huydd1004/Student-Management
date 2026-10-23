@@ -6,5 +6,6 @@ export * from './common';
 export * from './lesson-check';
 export * from './math-exercise';
 export * from './member';
+export * from './parent-representative';
 export * from './student';
 export * from './subject';

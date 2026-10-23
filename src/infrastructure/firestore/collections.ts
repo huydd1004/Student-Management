@@ -9,5 +9,6 @@ export const COLLECTIONS = {
   lessonCheckCalls: 'lessonCheckCalls',
   chatMessages: 'chatMessages',
   mathExerciseSets: 'mathExerciseSets',
+  parentRepresentatives: 'parentRepresentatives',
   activityLogs: 'activityLogs',
 } as const;

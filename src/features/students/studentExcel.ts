@@ -22,15 +22,20 @@ const EXCEL_HEADERS = [
   'Họ và tên',
   'Ngày sinh',
   'Giới tính',
+  'Dân tộc',
   'Tổ',
   'Học lực theo dõi',
   'Chức vụ',
   'Ngày vào lớp',
   'Trạng thái',
   'Địa chỉ thường trú',
-  'Họ tên phụ huynh',
-  'Quan hệ',
-  'Số điện thoại',
+  'Hoàn cảnh khó khăn',
+  'Họ tên người giám hộ 1',
+  'Quan hệ 1',
+  'SĐT người giám hộ 1',
+  'Họ tên người giám hộ 2',
+  'Quan hệ 2',
+  'SĐT người giám hộ 2',
   'Ghi chú',
 ] as const
 
@@ -63,12 +68,17 @@ const excelColumns = [
   { width: 26 },
   { width: 14 },
   { width: 14 },
+  { width: 14 },
   { width: 12 },
   { width: 20 },
   { width: 18 },
   { width: 14 },
   { width: 20 },
   { width: 36 },
+  { width: 36 },
+  { width: 24 },
+  { width: 15 },
+  { width: 18 },
   { width: 24 },
   { width: 15 },
   { width: 18 },
@@ -215,6 +225,7 @@ export async function exportStudentsToExcel(
       createDataCell(student.fullName),
       createDataCell(toExcelDate(student.dateOfBirth), 'center', 'dd/mm/yyyy'),
       createDataCell(genderLabels[student.gender], 'center'),
+      createDataCell(student.ethnicity ?? '', 'center'),
       createDataCell(student.group ?? '', 'center'),
       createDataCell(
         student.academicPerformance
@@ -226,10 +237,21 @@ export async function exportStudentsToExcel(
       createDataCell(toExcelDate(student.joinedOn), 'center', 'dd/mm/yyyy'),
       createDataCell(statusLabels[student.status], 'center'),
       createDataCell(student.permanentAddress ?? ''),
+      createDataCell(student.difficultCircumstances ?? ''),
       createDataCell(student.guardian?.fullName ?? ''),
       createDataCell(student.guardian?.relationship ?? '', 'center'),
       createDataCell(
         student.guardian?.phoneNumber ?? '',
+        'left',
+        '@',
+      ),
+      createDataCell(student.secondaryGuardian?.fullName ?? ''),
+      createDataCell(
+        student.secondaryGuardian?.relationship ?? '',
+        'center',
+      ),
+      createDataCell(
+        student.secondaryGuardian?.phoneNumber ?? '',
         'left',
         '@',
       ),
@@ -327,6 +349,7 @@ export async function parseStudentsFromExcel(
     fullName: findColumnIndex(headers, ['Họ và tên', 'Họ tên']),
     dateOfBirth: findColumnIndex(headers, ['Ngày sinh']),
     gender: findColumnIndex(headers, ['Giới tính']),
+    ethnicity: findColumnIndex(headers, ['Dân tộc']),
     group: findColumnIndex(headers, ['Tổ']),
     academicPerformance: findColumnIndex(headers, [
       'Học lực theo dõi',
@@ -339,9 +362,32 @@ export async function parseStudentsFromExcel(
       'Địa chỉ thường trú',
       'Địa chỉ',
     ]),
-    guardianName: findColumnIndex(headers, ['Họ tên phụ huynh']),
-    guardianRelationship: findColumnIndex(headers, ['Quan hệ']),
-    guardianPhone: findColumnIndex(headers, ['Số điện thoại', 'SĐT']),
+    difficultCircumstances: findColumnIndex(headers, [
+      'Hoàn cảnh khó khăn',
+      'Hoàn cảnh',
+    ]),
+    guardianName: findColumnIndex(headers, [
+      'Họ tên người giám hộ 1',
+      'Họ tên phụ huynh',
+    ]),
+    guardianRelationship: findColumnIndex(headers, [
+      'Quan hệ 1',
+      'Quan hệ',
+    ]),
+    guardianPhone: findColumnIndex(headers, [
+      'SĐT người giám hộ 1',
+      'Số điện thoại',
+      'SĐT',
+    ]),
+    secondaryGuardianName: findColumnIndex(headers, [
+      'Họ tên người giám hộ 2',
+    ]),
+    secondaryGuardianRelationship: findColumnIndex(headers, [
+      'Quan hệ 2',
+    ]),
+    secondaryGuardianPhone: findColumnIndex(headers, [
+      'SĐT người giám hộ 2',
+    ]),
     notes: findColumnIndex(headers, ['Ghi chú']),
   }
 
@@ -449,6 +495,20 @@ export async function parseStudentsFromExcel(
     const hasGuardian = Boolean(
       guardianName || guardianRelationship || guardianPhone,
     )
+    const secondaryGuardianName = readCell(
+      row[column.secondaryGuardianName],
+    )
+    const secondaryGuardianRelationship = readCell(
+      row[column.secondaryGuardianRelationship],
+    )
+    const secondaryGuardianPhone = readCell(
+      row[column.secondaryGuardianPhone],
+    )
+    const hasSecondaryGuardian = Boolean(
+      secondaryGuardianName ||
+        secondaryGuardianRelationship ||
+        secondaryGuardianPhone,
+    )
 
     students.push({
       studentCode,
@@ -456,6 +516,9 @@ export async function parseStudentsFromExcel(
       gender,
       status,
       ...(dateOfBirth ? { dateOfBirth } : {}),
+      ...(readCell(row[column.ethnicity])
+        ? { ethnicity: readCell(row[column.ethnicity]) }
+        : {}),
       ...(readCell(row[column.group])
         ? { group: readCell(row[column.group]) }
         : {}),
@@ -471,12 +534,28 @@ export async function parseStudentsFromExcel(
             ),
           }
         : {}),
+      ...(readCell(row[column.difficultCircumstances])
+        ? {
+            difficultCircumstances: readCell(
+              row[column.difficultCircumstances],
+            ),
+          }
+        : {}),
       ...(hasGuardian
         ? {
             guardian: {
               fullName: guardianName,
               relationship: guardianRelationship,
               phoneNumber: guardianPhone,
+            },
+          }
+        : {}),
+      ...(hasSecondaryGuardian
+        ? {
+            secondaryGuardian: {
+              fullName: secondaryGuardianName,
+              relationship: secondaryGuardianRelationship,
+              phoneNumber: secondaryGuardianPhone,
             },
           }
         : {}),

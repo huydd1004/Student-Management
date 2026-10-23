@@ -32,6 +32,13 @@ export const firestorePaths = {
     `${COLLECTIONS.classes}/${classId}/${COLLECTIONS.chatMessages}`,
   mathExerciseSets: (classId: string) =>
     `${COLLECTIONS.classes}/${classId}/${COLLECTIONS.mathExerciseSets}`,
+  parentRepresentatives: (classId: string) =>
+    `${COLLECTIONS.classes}/${classId}/${COLLECTIONS.parentRepresentatives}`,
+  parentRepresentative: (
+    classId: string,
+    representativeId: string,
+  ) =>
+    `${COLLECTIONS.classes}/${classId}/${COLLECTIONS.parentRepresentatives}/${representativeId}`,
   activityLogs: (classId: string) =>
     `${COLLECTIONS.classes}/${classId}/${COLLECTIONS.activityLogs}`,
 } as const;

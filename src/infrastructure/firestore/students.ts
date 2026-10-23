@@ -32,11 +32,14 @@ export interface CreateStudentInput {
   fullName: string;
   dateOfBirth?: LocalDate;
   gender: StudentGender;
+  ethnicity?: string;
   group?: string;
   academicPerformance?: StudentAcademicPerformance;
   classDuty?: string;
   permanentAddress?: string;
+  difficultCircumstances?: string;
   guardian?: GuardianContact;
+  secondaryGuardian?: GuardianContact;
   joinedOn?: LocalDate;
   status: StudentStatus;
   notes?: string;
@@ -84,6 +87,10 @@ export async function createStudent(
       ? { dateOfBirth: input.dateOfBirth }
       : {}),
 
+    ...(input.ethnicity
+      ? { ethnicity: input.ethnicity.trim() }
+      : {}),
+
     ...(input.group
       ? { group: input.group.trim() }
       : {}),
@@ -96,6 +103,13 @@ export async function createStudent(
       ? { permanentAddress: input.permanentAddress.trim() }
       : {}),
 
+    ...(input.difficultCircumstances
+      ? {
+          difficultCircumstances:
+            input.difficultCircumstances.trim(),
+        }
+      : {}),
+
     ...(input.guardian
       ? {
           guardian: {
@@ -104,6 +118,18 @@ export async function createStudent(
               input.guardian.relationship.trim(),
             phoneNumber:
               input.guardian.phoneNumber.trim(),
+          },
+        }
+      : {}),
+
+    ...(input.secondaryGuardian
+      ? {
+          secondaryGuardian: {
+            fullName: input.secondaryGuardian.fullName.trim(),
+            relationship:
+              input.secondaryGuardian.relationship.trim(),
+            phoneNumber:
+              input.secondaryGuardian.phoneNumber.trim(),
           },
         }
       : {}),
@@ -147,14 +173,24 @@ export async function updateStudent(
           input.academicPerformance || deleteField(),
 
         dateOfBirth: input.dateOfBirth || deleteField(),
+        ethnicity: input.ethnicity?.trim() || deleteField(),
         group: input.group?.trim() || deleteField(),
         classDuty: input.classDuty?.trim() || deleteField(),
         permanentAddress:
           input.permanentAddress?.trim() || deleteField(),
+        difficultCircumstances:
+          input.difficultCircumstances?.trim() || deleteField(),
         guardian: input.guardian? {
             fullName: input.guardian.fullName.trim(),
             relationship: input.guardian.relationship.trim(),
             phoneNumber: input.guardian.phoneNumber.trim(),
+        } : deleteField(),
+        secondaryGuardian: input.secondaryGuardian ? {
+            fullName: input.secondaryGuardian.fullName.trim(),
+            relationship:
+              input.secondaryGuardian.relationship.trim(),
+            phoneNumber:
+              input.secondaryGuardian.phoneNumber.trim(),
         } : deleteField(),
 
         joinedOn: input.joinedOn || deleteField(),
@@ -167,40 +203,49 @@ export async function updateStudent(
 }
 
 export async function deleteStudent(studentId: string) {
-  const incidentsQuery = query(
-    collection(
-      db,
-      firestorePaths.attendanceIncidents(CLASSROOM_ID),
-    ),
-    where('studentId', '==', studentId),
-  );
-
-  const incidentsSnapshot = await getDocs(incidentsQuery);
-
-  for (
-    let start = 0;
-    start < incidentsSnapshot.docs.length;
-    start += 450
-  ) {
-    const batch = writeBatch(db);
-    const chunk = incidentsSnapshot.docs.slice(
-      start,
-      start + 450,
-    );
-
-    chunk.forEach((incidentSnapshot) => {
-      batch.delete(incidentSnapshot.ref);
-    });
-
-    await batch.commit();
-  }
-
   await deleteDoc(
     doc(
       db,
       firestorePaths.student(CLASSROOM_ID, studentId),
     ),
   );
+
+  // Dọn dữ liệu phụ theo cơ chế best-effort: lỗi ở lịch sử không được
+  // phép làm thao tác xóa hồ sơ chính thất bại.
+  try {
+    const incidentsQuery = query(
+      collection(
+        db,
+        firestorePaths.attendanceIncidents(CLASSROOM_ID),
+      ),
+      where('studentId', '==', studentId),
+    );
+
+    const incidentsSnapshot = await getDocs(incidentsQuery);
+
+    for (
+      let start = 0;
+      start < incidentsSnapshot.docs.length;
+      start += 450
+    ) {
+      const batch = writeBatch(db);
+      const chunk = incidentsSnapshot.docs.slice(
+        start,
+        start + 450,
+      );
+
+      chunk.forEach((incidentSnapshot) => {
+        batch.delete(incidentSnapshot.ref);
+      });
+
+      await batch.commit();
+    }
+  } catch (cleanupError) {
+    console.warn(
+      'Không thể dọn toàn bộ lịch sử vắng học của học sinh đã xóa.',
+      cleanupError,
+    );
+  }
 }
 
 export async function importStudents(
@@ -241,6 +286,15 @@ export async function importStudents(
             phoneNumber: input.guardian.phoneNumber.trim(),
           }
         : undefined;
+      const secondaryGuardian = input.secondaryGuardian
+        ? {
+            fullName: input.secondaryGuardian.fullName.trim(),
+            relationship:
+              input.secondaryGuardian.relationship.trim(),
+            phoneNumber:
+              input.secondaryGuardian.phoneNumber.trim(),
+          }
+        : undefined;
 
       if (existingReference) {
         batch.update(existingReference, {
@@ -252,11 +306,16 @@ export async function importStudents(
           academicPerformance:
             input.academicPerformance || deleteField(),
           dateOfBirth: input.dateOfBirth || deleteField(),
+          ethnicity: input.ethnicity?.trim() || deleteField(),
           group: input.group?.trim() || deleteField(),
           classDuty: input.classDuty?.trim() || deleteField(),
           permanentAddress:
             input.permanentAddress?.trim() || deleteField(),
+          difficultCircumstances:
+            input.difficultCircumstances?.trim() || deleteField(),
           guardian: guardian || deleteField(),
+          secondaryGuardian:
+            secondaryGuardian || deleteField(),
           joinedOn: input.joinedOn || deleteField(),
           notes: input.notes?.trim() || deleteField(),
           updatedAt: serverTimestamp(),
@@ -280,6 +339,9 @@ export async function importStudents(
         ...(input.dateOfBirth
           ? { dateOfBirth: input.dateOfBirth }
           : {}),
+        ...(input.ethnicity
+          ? { ethnicity: input.ethnicity.trim() }
+          : {}),
         ...(input.group
           ? { group: input.group.trim() }
           : {}),
@@ -289,7 +351,14 @@ export async function importStudents(
         ...(input.permanentAddress
           ? { permanentAddress: input.permanentAddress.trim() }
           : {}),
+        ...(input.difficultCircumstances
+          ? {
+              difficultCircumstances:
+                input.difficultCircumstances.trim(),
+            }
+          : {}),
         ...(guardian ? { guardian } : {}),
+        ...(secondaryGuardian ? { secondaryGuardian } : {}),
         ...(input.joinedOn ? { joinedOn: input.joinedOn } : {}),
         ...(input.notes
           ? { notes: input.notes.trim() }

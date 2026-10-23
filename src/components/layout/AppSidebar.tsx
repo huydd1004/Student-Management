@@ -2,6 +2,7 @@ import {
   BookOpenCheck,
   ClipboardCheck,
   Dices,
+  Handshake,
   LayoutDashboard,
   LoaderCircle,
   LogOut,
@@ -47,6 +48,11 @@ const navigationItems = [
     label: 'Học sinh',
     icon: Users,
     to: '/students',
+  },
+  {
+    label: 'Ban phụ huynh',
+    icon: Handshake,
+    to: '/parent-representatives',
   },
   {
     label: 'Điểm danh',

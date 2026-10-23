@@ -7,6 +7,7 @@ import { LessonCheckPage } from '../pages/LessonCheckPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { ChatPage } from '../pages/ChatPage'
 import { MathExercisesPage } from '../pages/MathExercisesPage'
+import { ParentRepresentativesPage } from '../pages/ParentRepresentativesPage'
 import { useAuth } from '../auth/AuthProvider';
 import { LoginPage } from '../pages/LoginPage';
 import { AccessDeniedPage } from '../pages/AccessDeniedPage';
@@ -52,6 +53,11 @@ if (accessStatus === 'unauthorized' || accessStatus === 'error') {
             path="students"
             element={<StudentsPage />}
           />
+
+        <Route
+          path="parent-representatives"
+          element={<ParentRepresentativesPage />}
+        />
 
         <Route
           path='attendance'
