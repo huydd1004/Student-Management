@@ -89,6 +89,7 @@ function maskPhoneNumber(phoneNumber: string) {
 
 function toCreateStudentInput(
   values: StudentFormValues,
+  studentCode: string,
 ): CreateStudentInput {
   const hasGuardianInformation = Boolean(
     values.guardianName ||
@@ -102,7 +103,7 @@ function toCreateStudentInput(
   )
 
   return {
-    studentCode: values.studentCode,
+    studentCode,
     fullName: values.fullName,
     gender: values.gender,
     status: values.status,
@@ -172,7 +173,6 @@ function toStudentFormValues(
   student: StudentListItem,
 ): StudentFormValues {
   return {
-    studentCode: student.studentCode,
     fullName: student.fullName,
     dateOfBirth: student.dateOfBirth ?? '',
     gender: student.gender,
@@ -283,7 +283,10 @@ export function StudentsPage() {
     setSaveStudentError('')
 
     try {
-      const studentInput = toCreateStudentInput(values)
+      const studentInput = toCreateStudentInput(
+        values,
+        selectedStudent?.studentCode ?? '',
+      )
 
       if (selectedStudent) {
         await updateStudent(

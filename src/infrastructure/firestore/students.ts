@@ -71,9 +71,11 @@ export async function createStudent(
   const studentReference = doc(
     collection(db, studentsPath),
   );
+  const studentCode = input.studentCode.trim()
+    || `HS-${studentReference.id.slice(0, 8).toUpperCase()}`;
 
   const studentData = {
-    studentCode: input.studentCode.trim(),
+    studentCode,
     fullName: input.fullName.trim(),
     normalizedName: normalizeSearchText(input.fullName),
     gender: input.gender,

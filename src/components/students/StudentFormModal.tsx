@@ -3,7 +3,6 @@ import { X } from 'lucide-react'
 import { DateInput } from '../ui/DateInput'
 
 export type StudentFormValues = {
-  studentCode: string
   fullName: string
   dateOfBirth: string
   gender: 'male' | 'female' | 'other' | 'unspecified'
@@ -60,7 +59,6 @@ export function StudentFormModal({
     }
 
     onSubmit({
-      studentCode: readValue('studentCode'),
       fullName: readValue('fullName'),
       dateOfBirth: readValue('dateOfBirth'),
       gender: readValue('gender') as StudentFormValues['gender'],
@@ -144,19 +142,6 @@ export function StudentFormModal({
             </p>
 
             <div className="mt-5 grid gap-5 sm:grid-cols-2">
-              <label className="text-sm font-medium text-slate-700">
-                Mã học sinh <span className="text-red-500">*</span>
-
-                <input
-                  name="studentCode"
-                  type="text"
-                  required
-                  defaultValue={initialValues.studentCode ?? ''}
-                  placeholder="Ví dụ: HS001"
-                  className={inputClassName}
-                />
-              </label>
-
               <label className="text-sm font-medium text-slate-700">
                 Họ và tên <span className="text-red-500">*</span>
 
