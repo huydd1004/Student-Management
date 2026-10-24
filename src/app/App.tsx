@@ -11,6 +11,7 @@ import { ParentRepresentativesPage } from '../pages/ParentRepresentativesPage'
 import { useAuth } from '../auth/AuthProvider';
 import { LoginPage } from '../pages/LoginPage';
 import { AccessDeniedPage } from '../pages/AccessDeniedPage';
+import { AiAssistantPage } from '../pages/AiAssistantPage';
 
 export function App() {
 const { user, isLoading, accessStatus } = useAuth();
@@ -70,6 +71,11 @@ if (accessStatus === 'unauthorized' || accessStatus === 'error') {
         />
 
         <Route path="chat" element={<ChatPage />} />
+
+        <Route
+          path="ai-assistant"
+          element={<AiAssistantPage />}
+        />
 
         <Route
           path="math-exercises"

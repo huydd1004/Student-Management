@@ -1,0 +1,8 @@
+name = "an-binh-class515-ai"
+main = "src/index.js"
+compatibility_date = "2026-10-24"
+
+[vars]
+OPENAI_MODEL = "gpt-6-luna"
+MAX_REQUESTS_PER_MINUTE = "12"
+ALLOWED_ORIGINS = "https://huydd1004.github.io,http://localhost:5173,http://127.0.0.1:5173"

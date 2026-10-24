@@ -1,6 +1,7 @@
 import {
   ArrowRight,
   BookOpenCheck,
+  Bot,
   ClipboardCheck,
   Dices,
 } from 'lucide-react'
@@ -50,6 +51,20 @@ const quickActions = [
     buttonClass:
       'border border-pink-200 bg-white text-lotus-700 hover:bg-lotus-50 focus-visible:outline-lotus-600',
   },
+  {
+    title: 'Trợ lý AI',
+    description:
+      'Hỗ trợ soạn bài tập Toán, nhận xét học sinh và thông báo phụ huynh.',
+    status: 'OpenAI',
+    buttonLabel: 'Mở trợ lý AI',
+    icon: Bot,
+    to: '/ai-assistant',
+    cardClass: 'border-slate-200 bg-white',
+    iconClass: 'bg-lotus-50 text-lotus-700',
+    statusClass: 'bg-purple-50 text-purple-700',
+    buttonClass:
+      'border border-pink-200 bg-white text-lotus-700 hover:bg-lotus-50 focus-visible:outline-lotus-600',
+  },
 ]
 
 export function QuickActions() {
@@ -68,7 +83,7 @@ export function QuickActions() {
         </p>
       </div>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-4 grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
         {quickActions.map(
           ({
             title,

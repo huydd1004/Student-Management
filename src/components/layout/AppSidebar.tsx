@@ -1,5 +1,6 @@
 import {
   BookOpenCheck,
+  Bot,
   ClipboardCheck,
   Dices,
   Handshake,
@@ -68,6 +69,11 @@ const navigationItems = [
     label: 'Bài tập Toán',
     icon: BookOpenCheck,
     to: '/math-exercises',
+  },
+  {
+    label: 'Trợ lý AI',
+    icon: Bot,
+    to: '/ai-assistant',
   },
   {
     label: 'Trao đổi',
