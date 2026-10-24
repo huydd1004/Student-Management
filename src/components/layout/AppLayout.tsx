@@ -46,14 +46,14 @@ export function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 lg:flex">
+    <div className="min-h-[100dvh] bg-slate-50 lg:flex">
       <AppSidebar
         isMobileOpen={isMobileMenuOpen}
         onClose={closeMobileMenu}
       />
 
-      <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/90 px-5 backdrop-blur md:px-8">
+      <div className="safe-area-content min-w-0 flex-1">
+        <header className="safe-area-header sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200 bg-white/90 px-5 backdrop-blur md:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"

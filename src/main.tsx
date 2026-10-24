@@ -4,6 +4,7 @@ import { HashRouter } from 'react-router';
 
 import { App } from './app/App';
 import { AuthProvider } from './auth/AuthProvider';
+import { PwaUpdatePrompt } from './components/pwa/PwaUpdatePrompt';
 import { ThemeProvider } from './theme/ThemeProvider';
 import './styles/index.css';
 
@@ -18,6 +19,7 @@ if (!rootElement) {
 createRoot(rootElement).render(
   <StrictMode>
     <ThemeProvider>
+      <PwaUpdatePrompt />
       <AuthProvider>
         <HashRouter>
           <App />
