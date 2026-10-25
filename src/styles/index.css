@@ -133,6 +133,124 @@ input[type="date"] {
   );
 }
 
+.ai-message-content > :first-child {
+  margin-top: 0;
+}
+
+.ai-message-content > :last-child {
+  margin-bottom: 0;
+}
+
+.ai-message-content h1,
+.ai-message-content h2,
+.ai-message-content h3,
+.ai-message-content h4 {
+  margin: 1rem 0 0.45rem;
+  color: #0f172a;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.ai-message-content h1,
+.ai-message-content h2 {
+  font-size: 1rem;
+}
+
+.ai-message-content h3,
+.ai-message-content h4 {
+  font-size: 0.925rem;
+}
+
+.ai-message-content p,
+.ai-message-content ul,
+.ai-message-content ol,
+.ai-message-content blockquote,
+.ai-message-content pre,
+.ai-message-content table {
+  margin: 0.7rem 0;
+}
+
+.ai-message-content ul,
+.ai-message-content ol {
+  padding-left: 1.35rem;
+}
+
+.ai-message-content ul {
+  list-style: disc;
+}
+
+.ai-message-content ol {
+  list-style: decimal;
+}
+
+.ai-message-content li + li {
+  margin-top: 0.25rem;
+}
+
+.ai-message-content strong {
+  color: #0f172a;
+  font-weight: 750;
+}
+
+.ai-message-content a {
+  color: #ad1457;
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-color: #f9a8d4;
+  text-underline-offset: 3px;
+}
+
+.ai-message-content blockquote {
+  border-left: 3px solid #f9a8d4;
+  padding-left: 0.9rem;
+  color: #475569;
+}
+
+.ai-message-content code {
+  border-radius: 0.4rem;
+  background: #f1f5f9;
+  padding: 0.1rem 0.35rem;
+  color: #8f164d;
+  font-size: 0.88em;
+}
+
+.ai-message-content pre {
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: 0.8rem;
+  background: #0f172a;
+  padding: 0.8rem;
+  color: #f8fafc;
+  line-height: 1.6;
+}
+
+.ai-message-content pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.ai-message-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.ai-message-content th,
+.ai-message-content td {
+  border: 1px solid #e2e8f0;
+  padding: 0.45rem 0.65rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ai-message-content th {
+  background: #fff1f6;
+  color: #8f164d;
+  font-weight: 700;
+}
+
 /*
  * Lớp tương thích màu tối cho các màn hình đã có. Các màu trạng thái vẫn
  * được giữ riêng để người dùng nhận biết nhanh học sinh vắng, đi muộn và
@@ -180,6 +298,49 @@ html.dark body {
     #25101c 52%,
     #111827 100%
   );
+}
+
+.dark .ai-message-content h1,
+.dark .ai-message-content h2,
+.dark .ai-message-content h3,
+.dark .ai-message-content h4,
+.dark .ai-message-content strong {
+  color: #f4f7fb;
+}
+
+.dark .ai-message-content a {
+  color: #f472a3;
+  text-decoration-color: #9d174d;
+}
+
+.dark .ai-message-content blockquote {
+  border-left-color: #9d174d;
+  color: #c9d4e3;
+}
+
+.dark .ai-message-content code {
+  background: #1b2738;
+  color: #f9a8d4;
+}
+
+.dark .ai-message-content pre {
+  background: #070b12;
+  color: #f8fafc;
+}
+
+.dark .ai-message-content pre code {
+  background: transparent;
+  color: inherit;
+}
+
+.dark .ai-message-content th,
+.dark .ai-message-content td {
+  border-color: #334155;
+}
+
+.dark .ai-message-content th {
+  background: #291321;
+  color: #f9a8d4;
 }
 
 .dark .bg-white,

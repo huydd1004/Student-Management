@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 
 import { useAuth } from '../auth/AuthProvider'
+import { AiMessageContent } from '../components/ai/AiMessageContent'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import {
   AiAssistantError,
@@ -345,9 +346,13 @@ export function AiAssistantPage() {
                         }`}
                       >
                         {message.content ? (
-                          <p className="whitespace-pre-wrap break-words">
-                            {message.content}
-                          </p>
+                          isUserMessage ? (
+                            <p className="whitespace-pre-wrap break-words">
+                              {message.content}
+                            </p>
+                          ) : (
+                            <AiMessageContent content={message.content} />
+                          )
                         ) : (
                           <span className="flex items-center gap-2 text-slate-500">
                             <LoaderCircle

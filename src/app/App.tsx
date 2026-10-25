@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
 import { AppLayout } from '../components/layout/AppLayout'
 import { DashboardPage } from '../pages/DashboardPage'
@@ -11,7 +12,26 @@ import { ParentRepresentativesPage } from '../pages/ParentRepresentativesPage'
 import { useAuth } from '../auth/AuthProvider';
 import { LoginPage } from '../pages/LoginPage';
 import { AccessDeniedPage } from '../pages/AccessDeniedPage';
-import { AiAssistantPage } from '../pages/AiAssistantPage';
+
+const AiAssistantPage = lazy(async () => {
+  const pageModule = await import('../pages/AiAssistantPage')
+
+  return { default: pageModule.AiAssistantPage }
+})
+
+function PageLoadingState() {
+  return (
+    <div className="grid min-h-[24rem] place-items-center p-6">
+      <div
+        role="status"
+        className="flex flex-col items-center gap-3 text-lotus-700"
+      >
+        <div className="size-9 animate-spin rounded-full border-4 border-lotus-200 border-t-lotus-600" />
+        <span className="text-sm font-medium">Đang mở trang...</span>
+      </div>
+    </div>
+  )
+}
 
 export function App() {
 const { user, isLoading, accessStatus } = useAuth();
@@ -74,7 +94,11 @@ if (accessStatus === 'unauthorized' || accessStatus === 'error') {
 
         <Route
           path="ai-assistant"
-          element={<AiAssistantPage />}
+          element={
+            <Suspense fallback={<PageLoadingState />}>
+              <AiAssistantPage />
+            </Suspense>
+          }
         />
 
         <Route
