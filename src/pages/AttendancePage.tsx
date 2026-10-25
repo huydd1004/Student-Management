@@ -56,6 +56,17 @@ function formatDisplayDate(value: string) {
   return formatLocalDateForDisplay(value)
 }
 
+function formatGroupName(value?: string) {
+  const normalizedGroup = (value ?? '')
+    .trim()
+    .replace(/^(?:tổ|to)\s*[:.-]?\s*/i, '')
+    .trim()
+
+  return normalizedGroup
+    ? `Tổ ${normalizedGroup}`
+    : 'Chưa xếp tổ'
+}
+
 const periodOptions = [
   {
     value: 'morning' as const,
@@ -637,7 +648,7 @@ export function AttendancePage() {
                         </p>
 
                         <p className="mt-0.5 text-xs text-slate-500">
-                          {student.group || 'Chưa xếp tổ'}
+                          {formatGroupName(student.group)}
                         </p>
                       </div>
                     </div>

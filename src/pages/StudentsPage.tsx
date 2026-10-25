@@ -11,6 +11,7 @@ import {
   Download,
   Eye,
   EyeOff,
+  Handshake,
   SlidersHorizontal,
   LoaderCircle,
   Pencil,
@@ -23,8 +24,10 @@ import {
   UsersRound,
   X,
 } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router'
 
 import { useAuth } from '../auth/AuthProvider'
+import { ParentRepresentativesPage } from './ParentRepresentativesPage'
 import { StudentFormModal } from '../components/students/StudentFormModal'
 import type { StudentFormValues } from '../components/students/StudentFormModal'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
@@ -226,6 +229,12 @@ function toStudentFormValues(
 
 export function StudentsPage() {
   const { user } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const activeDirectoryTab =
+    location.hash === '#parent-representatives'
+      ? 'parent-representatives'
+      : 'students'
   const excelFileInputRef = useRef<HTMLInputElement>(null)
   const [isStudentFormOpen, setIsStudentFormOpen] = useState(false)
   const [students, setStudents] = useState<StudentListItem[]>([])
@@ -596,15 +605,16 @@ export function StudentsPage() {
           </p>
 
           <h2 className="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">
-            Danh sách học sinh
+            Học sinh và phụ huynh
           </h2>
 
           <p className="mt-2 max-w-2xl leading-7 text-slate-600">
-            Quản lý thông tin và trạng thái học tập của học sinh
-            lớp 5.15.
+            Quản lý hồ sơ học sinh và ban đại diện phụ huynh lớp
+            5.15 tại cùng một nơi.
           </p>
         </div>
 
+        {activeDirectoryTab === 'students' ? (
         <div className="flex flex-wrap gap-2 sm:justify-end">
           <input
             ref={excelFileInputRef}
@@ -660,7 +670,52 @@ export function StudentsPage() {
             Thêm học sinh
           </button>
         </div>
+        ) : null}
       </section>
+
+      <nav
+        className="mt-7 inline-flex max-w-full gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm"
+        aria-label="Nội dung quản lý học sinh và phụ huynh"
+      >
+        <button
+          type="button"
+          onClick={() => navigate('/students')}
+          className={`inline-flex h-11 shrink-0 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition ${
+            activeDirectoryTab === 'students'
+              ? 'bg-lotus-600 text-white shadow-sm'
+              : 'text-slate-600 hover:bg-lotus-50 hover:text-lotus-700'
+          }`}
+          aria-current={
+            activeDirectoryTab === 'students' ? 'page' : undefined
+          }
+        >
+          <UsersRound aria-hidden="true" size={18} />
+          Danh sách học sinh
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            navigate('/students#parent-representatives')
+          }
+          className={`inline-flex h-11 shrink-0 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition ${
+            activeDirectoryTab === 'parent-representatives'
+              ? 'bg-lotus-600 text-white shadow-sm'
+              : 'text-slate-600 hover:bg-lotus-50 hover:text-lotus-700'
+          }`}
+          aria-current={
+            activeDirectoryTab === 'parent-representatives'
+              ? 'page'
+              : undefined
+          }
+        >
+          <Handshake aria-hidden="true" size={18} />
+          Ban phụ huynh
+        </button>
+      </nav>
+
+      {activeDirectoryTab === 'students' ? (
+        <>
 
       {excelMessage && (
         <p
@@ -1219,6 +1274,10 @@ export function StudentsPage() {
         onClose={closeDeleteDialog}
         onConfirm={confirmStudentDeletion}
       />
+        </>
+      ) : (
+        <ParentRepresentativesPage embedded />
+      )}
     </main>
   )
 }

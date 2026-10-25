@@ -4,13 +4,13 @@ import {
   CalendarDays,
   ClipboardCheck,
   Dices,
-  Handshake,
   LayoutDashboard,
   LoaderCircle,
   LogOut,
   MessagesSquare,
   School,
   Settings,
+  Timer,
   Users,
   X,
 } from 'lucide-react'
@@ -57,11 +57,6 @@ const navigationItems = [
     to: '/calendar',
   },
   {
-    label: 'Ban phụ huynh',
-    icon: Handshake,
-    to: '/parent-representatives',
-  },
-  {
     label: 'Điểm danh',
     icon: ClipboardCheck,
     to: '/attendance',
@@ -70,6 +65,11 @@ const navigationItems = [
     label: 'Gọi bài',
     icon: Dices,
     to: '/lesson-check',
+  },
+  {
+    label: 'Đồng hồ làm bài',
+    icon: Timer,
+    to: '/timer',
   },
   {
     label: 'Bài tập Toán',

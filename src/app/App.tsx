@@ -8,7 +8,6 @@ import { LessonCheckPage } from '../pages/LessonCheckPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { ChatPage } from '../pages/ChatPage'
 import { MathExercisesPage } from '../pages/MathExercisesPage'
-import { ParentRepresentativesPage } from '../pages/ParentRepresentativesPage'
 import { useAuth } from '../auth/AuthProvider';
 import { LoginPage } from '../pages/LoginPage';
 import { AccessDeniedPage } from '../pages/AccessDeniedPage';
@@ -23,6 +22,12 @@ const CalendarPage = lazy(async () => {
   const pageModule = await import('../pages/CalendarPage')
 
   return { default: pageModule.CalendarPage }
+})
+
+const TimerPage = lazy(async () => {
+  const pageModule = await import('../pages/TimerPage')
+
+  return { default: pageModule.TimerPage }
 })
 
 function PageLoadingState() {
@@ -92,7 +97,12 @@ if (accessStatus === 'unauthorized' || accessStatus === 'error') {
 
         <Route
           path="parent-representatives"
-          element={<ParentRepresentativesPage />}
+          element={
+            <Navigate
+              to="/students#parent-representatives"
+              replace
+            />
+          }
         />
 
         <Route
@@ -103,6 +113,15 @@ if (accessStatus === 'unauthorized' || accessStatus === 'error') {
         <Route
           path="lesson-check"
           element={<LessonCheckPage />}
+        />
+
+        <Route
+          path="timer"
+          element={
+            <Suspense fallback={<PageLoadingState />}>
+              <TimerPage />
+            </Suspense>
+          }
         />
 
         <Route path="chat" element={<ChatPage />} />

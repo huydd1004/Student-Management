@@ -23,7 +23,13 @@ import {
   type ParentRepresentativeListItem,
 } from '../infrastructure/firestore'
 
-export function ParentRepresentativesPage() {
+type ParentRepresentativesPageProps = {
+  embedded?: boolean
+}
+
+export function ParentRepresentativesPage({
+  embedded = false,
+}: ParentRepresentativesPageProps) {
   const { user } = useAuth()
   const [representatives, setRepresentatives] = useState<
     ParentRepresentativeListItem[]
@@ -152,7 +158,14 @@ export function ParentRepresentativesPage() {
   }
 
   return (
-    <main className="p-5 md:p-8">
+    <section
+      id="parent-representatives"
+      className={
+        embedded
+          ? 'mt-8 scroll-mt-28'
+          : 'p-5 md:p-8'
+      }
+    >
       <section className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.12em] text-lotus-600">
@@ -362,6 +375,6 @@ export function ParentRepresentativesPage() {
         onClose={closeDeleteDialog}
         onConfirm={confirmDeletion}
       />
-    </main>
+    </section>
   )
 }
