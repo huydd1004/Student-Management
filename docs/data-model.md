@@ -25,6 +25,7 @@ classes/{classId}
 ├── students/{studentId}
 ├── attendanceIncidents/{date_period_studentId}
 ├── lessonCheckCalls/{callId}
+├── calendarEvents/{eventId}
 └── activityLogs/{logId}
 ```
 
@@ -72,7 +73,6 @@ Danh mục môn học có thể bật, tắt hoặc bổ sung sau này. `subject
 
 Hồ sơ học sinh gồm:
 
-- mã học sinh;
 - họ tên và tên đã chuẩn hóa để tìm kiếm;
 - ngày sinh, giới tính;
 - tổ và chức vụ trong lớp;
@@ -111,6 +111,13 @@ Quy tắc chọn công bằng:
 2. Tìm số lần được gọi thấp nhất trong môn học và vòng hiện tại.
 3. Chọn ngẫu nhiên trong nhóm có số lần thấp nhất.
 4. Khi tất cả học sinh hợp lệ đã được gọi, tăng `cycleNumber` và bắt đầu vòng mới.
+
+### `calendarEvents/{eventId}`
+
+Lưu lịch dùng chung của lớp, gồm tiêu đề, ngày, thời gian, loại công việc,
+ghi chú và thời điểm nhắc. Cả hai thành viên đều có thể tạo, sửa và xóa sự kiện.
+Thông báo đã xem được lưu riêng trên thiết bị của từng người để không ảnh hưởng
+trạng thái thông báo của người còn lại.
 
 ### `activityLogs/{logId}`
 

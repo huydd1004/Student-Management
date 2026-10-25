@@ -11,14 +11,17 @@ import {
   Download,
   Eye,
   EyeOff,
+  SlidersHorizontal,
   LoaderCircle,
   Pencil,
+  Phone,
   Plus,
   Search,
   Trash2,
   Upload,
   UserPlus,
   UsersRound,
+  X,
 } from 'lucide-react'
 
 import { useAuth } from '../auth/AuthProvider'
@@ -33,6 +36,7 @@ import {
   createStudent,
   deleteStudent,
   importStudents,
+  removeLegacyStudentCodes,
   subscribeToStudents,
   updateStudent,
   type CreateStudentInput,
@@ -41,6 +45,17 @@ import {
 import { formatPartialDateForDisplay } from '../utils/date'
 
 type StudentStatusFilter = 'all' | StudentFormValues['status']
+type StudentGroupFilter = 'all' | string
+type StudentPerformanceFilter =
+  | 'all'
+  | 'unrated'
+  | Exclude<StudentFormValues['academicPerformance'], ''>
+type StudentGenderFilter = 'all' | StudentFormValues['gender']
+type StudentTrackingFilter =
+  | 'all'
+  | 'class-duty'
+  | 'difficult-circumstances'
+  | 'missing-guardian-phone'
 
 const statusLabels: Record<StudentFormValues['status'], string> = {
   active: 'Đang học',
@@ -87,9 +102,20 @@ function maskPhoneNumber(phoneNumber: string) {
   )}${digits.slice(-2)}`
 }
 
+function normalizeGroup(value?: string) {
+  return normalizeSearchText(value ?? '')
+    .replace(/^to\s*/, '')
+    .trim()
+}
+
+function formatGroupLabel(value: string) {
+  const normalizedValue = value.replace(/^t(?:ổ|o)\s*/i, '').trim()
+
+  return normalizedValue ? `Tổ ${normalizedValue}` : 'Chưa xếp tổ'
+}
+
 function toCreateStudentInput(
   values: StudentFormValues,
-  studentCode: string,
 ): CreateStudentInput {
   const hasGuardianInformation = Boolean(
     values.guardianName ||
@@ -103,7 +129,6 @@ function toCreateStudentInput(
   )
 
   return {
-    studentCode,
     fullName: values.fullName,
     gender: values.gender,
     status: values.status,
@@ -206,6 +231,14 @@ export function StudentsPage() {
   const [students, setStudents] = useState<StudentListItem[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<StudentStatusFilter>('all')
+  const [groupFilter, setGroupFilter] = useState<StudentGroupFilter>('all')
+  const [performanceFilter, setPerformanceFilter] =
+    useState<StudentPerformanceFilter>('all')
+  const [genderFilter, setGenderFilter] =
+    useState<StudentGenderFilter>('all')
+  const [trackingFilter, setTrackingFilter] =
+    useState<StudentTrackingFilter>('all')
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false)
   const [isStudentsLoading, setIsStudentsLoading] = useState(true)
   const [studentsError, setStudentsError] = useState('')
   const [isSavingStudent, setIsSavingStudent] = useState(false)
@@ -248,6 +281,25 @@ export function StudentsPage() {
     return unsubscribe
   }, [])
 
+  useEffect(() => {
+    if (!user) return
+
+    void removeLegacyStudentCodes().catch((error) => {
+      console.warn('Không thể dọn dữ liệu mã học sinh cũ.', error)
+    })
+  }, [user])
+
+  useEffect(() => {
+    if (!isFilterPanelOpen) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isFilterPanelOpen])
+
   function openStudentForm() {
     setSelectedStudent(null)
     setSaveStudentError('')
@@ -270,9 +322,7 @@ export function StudentsPage() {
     setSelectedStudent(null)
   }
 
-  async function saveStudent(values:StudentFormValues,
-
-  ) {
+  async function saveStudent(values: StudentFormValues) {
     if (!user) {
       setSaveStudentError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
       )
@@ -283,10 +333,7 @@ export function StudentsPage() {
     setSaveStudentError('')
 
     try {
-      const studentInput = toCreateStudentInput(
-        values,
-        selectedStudent?.studentCode ?? '',
-      )
+      const studentInput = toCreateStudentInput(values)
 
       if (selectedStudent) {
         await updateStudent(
@@ -298,8 +345,7 @@ export function StudentsPage() {
         await createStudent(studentInput, user.uid,)
       }
 
-      setSearchQuery('')
-      setStatusFilter('all')
+      resetFilters()
       setIsStudentFormOpen(false)
       setSelectedStudent(null)
     } catch {
@@ -314,21 +360,84 @@ export function StudentsPage() {
 
   const normalizedQuery = normalizeSearchText(searchQuery)
 
+  const groupOptions = Array.from(
+    students.reduce((groups, student) => {
+      const groupKey = normalizeGroup(student.group)
+
+      if (groupKey && !groups.has(groupKey)) {
+        groups.set(groupKey, formatGroupLabel(student.group ?? groupKey))
+      }
+
+      return groups
+    }, new Map<string, string>()),
+  ).sort((first, second) =>
+    first[1].localeCompare(second[1], 'vi', {
+      numeric: true,
+      sensitivity: 'base',
+    }),
+  )
+
   const filteredStudents = students.filter((student) => {
     const matchesStatus = statusFilter === 'all' || student.status === statusFilter
+    const matchesGroup =
+      groupFilter === 'all' || normalizeGroup(student.group) === groupFilter
+    const matchesPerformance =
+      performanceFilter === 'all' ||
+      (performanceFilter === 'unrated'
+        ? !student.academicPerformance
+        : student.academicPerformance === performanceFilter)
+    const matchesGender =
+      genderFilter === 'all' || student.gender === genderFilter
+    const matchesTracking =
+      trackingFilter === 'all' ||
+      (trackingFilter === 'class-duty' && Boolean(student.classDuty)) ||
+      (trackingFilter === 'difficult-circumstances' &&
+        Boolean(student.difficultCircumstances)) ||
+      (trackingFilter === 'missing-guardian-phone' &&
+        !student.guardian?.phoneNumber)
 
-    const searchableText = normalizeSearchText(`${student.fullName} ${student.studentCode}`,)
+    const searchableText = normalizeSearchText(
+      [
+        student.fullName,
+        student.guardian?.fullName,
+        student.guardian?.phoneNumber,
+        student.secondaryGuardian?.fullName,
+        student.secondaryGuardian?.phoneNumber,
+      ]
+        .filter(Boolean)
+        .join(' '),
+    )
 
     const matchesSearch = searchableText.includes(normalizedQuery)
 
-    return matchesStatus && matchesSearch
+    return (
+      matchesStatus &&
+      matchesGroup &&
+      matchesPerformance &&
+      matchesGender &&
+      matchesTracking &&
+      matchesSearch
+    )
   })
 
-  const isFiltering = normalizedQuery !== '' || statusFilter !== 'all'
+  const additionalFilterCount = [
+    groupFilter,
+    performanceFilter,
+    genderFilter,
+    trackingFilter,
+  ].filter((value) => value !== 'all').length
+  const isFiltering =
+    normalizedQuery !== '' ||
+    statusFilter !== 'all' ||
+    additionalFilterCount > 0
 
   function resetFilters() {
     setSearchQuery('')
     setStatusFilter('all')
+    setGroupFilter('all')
+    setPerformanceFilter('all')
+    setGenderFilter('all')
+    setTrackingFilter('all')
   }
 
   function requestStudentDeletion(student: StudentListItem) {
@@ -453,7 +562,7 @@ export function StudentsPage() {
     try {
       const importedStudents = await parseStudentsFromExcel(file)
       const isConfirmed = window.confirm(
-        `Tệp có ${importedStudents.length} học sinh. Mã học sinh đã tồn tại sẽ được cập nhật, mã mới sẽ được thêm. Bạn có muốn tiếp tục?`,
+        `Tệp có ${importedStudents.length} học sinh. Hồ sơ trùng khớp sẽ được cập nhật, học sinh mới sẽ được thêm. Bạn có muốn tiếp tục?`,
       )
 
       if (!isConfirmed) return
@@ -463,8 +572,7 @@ export function StudentsPage() {
         user.uid,
       )
 
-      setSearchQuery('')
-      setStatusFilter('all')
+      resetFilters()
       setExcelMessage(
         `Đã nhập Excel thành công: thêm ${result.created}, cập nhật ${result.updated} học sinh.`,
       )
@@ -583,7 +691,7 @@ export function StudentsPage() {
 
             <input
               type="search"
-              placeholder="Tìm theo tên hoặc mã học sinh..."
+              placeholder="Tìm tên học sinh, người giám hộ hoặc số điện thoại..."
               className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-lotus-400 focus:bg-white focus:ring-4 focus:ring-pink-100"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
@@ -610,6 +718,22 @@ export function StudentsPage() {
               <option value="transferred">Đã chuyển trường</option>
               <option value="inactive">Ngừng học</option>
             </select>
+
+            <button
+              type="button"
+              onClick={() => setIsFilterPanelOpen(true)}
+              className="relative inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-pink-200 hover:bg-lotus-50 hover:text-lotus-700"
+              aria-expanded={isFilterPanelOpen}
+              aria-controls="student-filter-panel"
+            >
+              <SlidersHorizontal aria-hidden="true" size={18} />
+              Bộ lọc
+              {additionalFilterCount > 0 ? (
+                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-lotus-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  {additionalFilterCount}
+                </span>
+              ) : null}
+            </button>
 
             <span className="rounded-full bg-lotus-50 px-3 py-2 text-center text-xs font-semibold text-lotus-700">
               {isFiltering ? `${filteredStudents.length}/${students.length} học sinh` : `${students.length} học sinh`}
@@ -866,6 +990,15 @@ export function StudentsPage() {
                               <Eye aria-hidden="true" size={18} />
                             )}
                           </button>
+
+                          <a
+                            href={`tel:${student.guardian.phoneNumber.replace(/[^\d+]/g, '')}`}
+                            className="flex size-9 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-emerald-50 hover:text-emerald-700"
+                            aria-label={`Gọi cho người giám hộ của ${student.fullName}`}
+                            title="Gọi người giám hộ"
+                          >
+                            <Phone aria-hidden="true" size={18} />
+                          </a>
                         </div>
                       ) : (
                         <span className="text-sm text-slate-400">—</span>
@@ -919,6 +1052,146 @@ export function StudentsPage() {
           </table>
         </div>
       </section>
+
+      {isFilterPanelOpen ? (
+        <div className="fixed inset-0 z-[70] flex items-end justify-center p-0 sm:items-center sm:p-4">
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-950/50 backdrop-blur-[2px]"
+            aria-label="Đóng bộ lọc"
+            onClick={() => setIsFilterPanelOpen(false)}
+          />
+
+          <section
+            id="student-filter-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="student-filter-title"
+            className="relative z-10 max-h-[88dvh] w-full overflow-y-auto rounded-t-3xl border border-slate-200 bg-white shadow-2xl sm:max-w-2xl sm:rounded-3xl"
+          >
+            <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-lotus-600">
+                  Danh sách học sinh
+                </p>
+                <h3
+                  id="student-filter-title"
+                  className="mt-1 text-xl font-bold text-slate-900"
+                >
+                  Bộ lọc nâng cao
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsFilterPanelOpen(false)}
+                className="flex size-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                aria-label="Đóng bộ lọc"
+              >
+                <X aria-hidden="true" size={21} />
+              </button>
+            </header>
+
+            <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-6">
+              <label className="text-sm font-medium text-slate-700">
+                Tổ
+                <select
+                  value={groupFilter}
+                  onChange={(event) => setGroupFilter(event.target.value)}
+                  className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-lotus-400 focus:ring-4 focus:ring-pink-100"
+                >
+                  <option value="all">Tất cả các tổ</option>
+                  {groupOptions.map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="text-sm font-medium text-slate-700">
+                Học lực theo dõi
+                <select
+                  value={performanceFilter}
+                  onChange={(event) =>
+                    setPerformanceFilter(
+                      event.target.value as StudentPerformanceFilter,
+                    )
+                  }
+                  className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-lotus-400 focus:ring-4 focus:ring-pink-100"
+                >
+                  <option value="all">Tất cả mức học lực</option>
+                  <option value="unrated">Chưa đánh giá</option>
+                  <option value="weak">Yếu</option>
+                  <option value="average">Trung bình</option>
+                  <option value="good">Khá</option>
+                  <option value="excellent">Giỏi</option>
+                </select>
+              </label>
+
+              <label className="text-sm font-medium text-slate-700">
+                Giới tính
+                <select
+                  value={genderFilter}
+                  onChange={(event) =>
+                    setGenderFilter(
+                      event.target.value as StudentGenderFilter,
+                    )
+                  }
+                  className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-lotus-400 focus:ring-4 focus:ring-pink-100"
+                >
+                  <option value="all">Tất cả giới tính</option>
+                  <option value="male">Nam</option>
+                  <option value="female">Nữ</option>
+                  <option value="other">Khác</option>
+                  <option value="unspecified">Chưa xác định</option>
+                </select>
+              </label>
+
+              <label className="text-sm font-medium text-slate-700">
+                Nhóm cần theo dõi
+                <select
+                  value={trackingFilter}
+                  onChange={(event) =>
+                    setTrackingFilter(
+                      event.target.value as StudentTrackingFilter,
+                    )
+                  }
+                  className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-lotus-400 focus:ring-4 focus:ring-pink-100"
+                >
+                  <option value="all">Tất cả học sinh</option>
+                  <option value="class-duty">Có chức vụ trong lớp</option>
+                  <option value="difficult-circumstances">
+                    Có hoàn cảnh khó khăn
+                  </option>
+                  <option value="missing-guardian-phone">
+                    Chưa có SĐT người giám hộ
+                  </option>
+                </select>
+              </label>
+            </div>
+
+            <footer className="sticky bottom-0 flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <button
+                type="button"
+                onClick={resetFilters}
+                disabled={!isFiltering}
+                className="h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Xóa tất cả bộ lọc
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsFilterPanelOpen(false)}
+                className="h-11 rounded-xl bg-lotus-600 px-5 text-sm font-semibold text-white transition hover:bg-lotus-700"
+              >
+                Xem {filteredStudents.length} học sinh
+              </button>
+            </footer>
+          </section>
+        </div>
+      ) : null}
 
       <StudentFormModal
         key={selectedStudent?.id ?? 'new-student'}

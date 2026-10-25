@@ -11,4 +11,5 @@ export const COLLECTIONS = {
   mathExerciseSets: 'mathExerciseSets',
   parentRepresentatives: 'parentRepresentatives',
   activityLogs: 'activityLogs',
+  calendarEvents: 'calendarEvents',
 } as const;

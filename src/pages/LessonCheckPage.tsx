@@ -281,7 +281,6 @@ export function LessonCheckPage() {
 
       const callId = await createLessonCheckCall({
         studentId: selectedStudent.id,
-        studentCode: selectedStudent.studentCode,
         studentName: selectedStudent.fullName,
         subjectId: selectedSubject.id,
         subjectName: selectedSubject.name,

@@ -15,7 +15,6 @@ export interface GuardianContact {
 }
 
 export interface StudentDocument extends AuditFields {
-  studentCode: string;
   fullName: string;
   /** Họ tên viết thường, bỏ dấu; chỉ dùng để tìm kiếm. */
   normalizedName: string;

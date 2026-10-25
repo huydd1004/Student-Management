@@ -30,7 +30,6 @@ const ATTENDANCE_RETENTION_DAYS = 30;
 
 export interface AttendanceIncidentInput {
   studentId: string;
-  studentCode: string;
   studentName: string;
   status: AttendanceIncidentStatus;
   absenceReason?: string;
@@ -129,7 +128,6 @@ export async function saveAttendance(
 
     batch.set(incidentReference, {
       studentId: incidentRecord.studentId,
-      studentCode: incidentRecord.studentCode,
       studentName: incidentRecord.studentName,
       attendanceDate: input.attendanceDate,
       period: input.period,

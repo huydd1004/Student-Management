@@ -126,6 +126,51 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
     }
 
+    function validCalendarEvent() {
+      return request.resource.data.keys().hasOnly([
+          'title',
+          'eventDate',
+          'isAllDay',
+          'startTime',
+          'endTime',
+          'category',
+          'notes',
+          'reminderMinutes',
+          'createdAt',
+          'createdBy',
+          'updatedAt',
+          'updatedBy'
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && request.resource.data.eventDate is string
+        && request.resource.data.eventDate.size() == 10
+        && request.resource.data.isAllDay is bool
+        && (!request.resource.data.keys().hasAny(['startTime'])
+          || (request.resource.data.startTime is string
+            && request.resource.data.startTime.size() == 5))
+        && (!request.resource.data.keys().hasAny(['endTime'])
+          || (request.resource.data.endTime is string
+            && request.resource.data.endTime.size() == 5))
+        && request.resource.data.category in [
+          'teaching',
+          'meeting',
+          'assessment',
+          'personal',
+          'other'
+        ]
+        && (!request.resource.data.keys().hasAny(['notes'])
+          || (request.resource.data.notes is string
+            && request.resource.data.notes.size() <= 3000))
+        && (!request.resource.data.keys().hasAny(['reminderMinutes'])
+          || (request.resource.data.reminderMinutes is int
+            && request.resource.data.reminderMinutes >= 0
+            && request.resource.data.reminderMinutes <= 10080))
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.updatedAt == request.time;
+    }
+
     match /classes/{classId} {
       allow read: if isActiveAdmin(classId);
       allow create: if false;
@@ -196,6 +241,19 @@ service cloud.firestore {
           && request.resource.data.createdAt == request.time;
         allow update: if isActiveAdmin(classId)
           && validParentRepresentative()
+          && request.resource.data.createdBy == resource.data.createdBy
+          && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if isActiveAdmin(classId);
+      }
+
+      match /calendarEvents/{eventId} {
+        allow read: if isActiveAdmin(classId);
+        allow create: if isActiveAdmin(classId)
+          && validCalendarEvent()
+          && request.resource.data.createdBy == request.auth.uid
+          && request.resource.data.createdAt == request.time;
+        allow update: if isActiveAdmin(classId)
+          && validCalendarEvent()
           && request.resource.data.createdBy == resource.data.createdBy
           && request.resource.data.createdAt == resource.data.createdAt;
         allow delete: if isActiveAdmin(classId);

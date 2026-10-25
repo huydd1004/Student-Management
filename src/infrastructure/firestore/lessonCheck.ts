@@ -22,7 +22,6 @@ import { firestorePaths } from './paths'
 
 export interface CreateLessonCheckCallInput {
   studentId: string
-  studentCode: string
   studentName: string
   subjectId: string
   subjectName: string
@@ -44,7 +43,6 @@ export async function createLessonCheckCall(
 
   await setDoc(callReference, {
     studentId: input.studentId,
-    studentCode: input.studentCode,
     studentName: input.studentName,
     subjectId: input.subjectId,
     subjectName: input.subjectName,

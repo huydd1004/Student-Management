@@ -358,7 +358,6 @@ export function AttendancePage() {
 
         return {
           studentId: student.id,
-          studentCode: student.studentCode,
           studentName: student.fullName,
           status: draft.status,
           ...(draft.absenceReason.trim()
@@ -638,10 +637,7 @@ export function AttendancePage() {
                         </p>
 
                         <p className="mt-0.5 text-xs text-slate-500">
-                          {student.studentCode}
-                          {student.group
-                            ? ` · ${student.group}`
-                            : ''}
+                          {student.group || 'Chưa xếp tổ'}
                         </p>
                       </div>
                     </div>
@@ -785,7 +781,6 @@ export function AttendancePage() {
                   </p>
 
                   <p className="mt-1 text-xs text-slate-500">
-                    {incident.studentCode} ·{' '}
                     {formatDisplayDate(incident.attendanceDate)} ·{' '}
                     {periodLabels[incident.period]}
                   </p>

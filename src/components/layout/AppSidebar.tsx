@@ -1,6 +1,7 @@
 import {
   BookOpenCheck,
   Bot,
+  CalendarDays,
   ClipboardCheck,
   Dices,
   Handshake,
@@ -49,6 +50,11 @@ const navigationItems = [
     label: 'Học sinh',
     icon: Users,
     to: '/students',
+  },
+  {
+    label: 'Lịch & nhắc việc',
+    icon: CalendarDays,
+    to: '/calendar',
   },
   {
     label: 'Ban phụ huynh',

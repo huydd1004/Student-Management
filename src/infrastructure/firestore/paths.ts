@@ -41,6 +41,10 @@ export const firestorePaths = {
     `${COLLECTIONS.classes}/${classId}/${COLLECTIONS.parentRepresentatives}/${representativeId}`,
   activityLogs: (classId: string) =>
     `${COLLECTIONS.classes}/${classId}/${COLLECTIONS.activityLogs}`,
+  calendarEvents: (classId: string) =>
+    `${COLLECTIONS.classes}/${classId}/${COLLECTIONS.calendarEvents}`,
+  calendarEvent: (classId: string, eventId: string) =>
+    `${COLLECTIONS.classes}/${classId}/${COLLECTIONS.calendarEvents}/${eventId}`,
 } as const;
 
 export function createAttendanceSessionId(

@@ -5,5 +5,6 @@ export * from './students';
 export * from './lessonCheck';
 export * from './members';
 export * from './chat';
+export * from './calendarEvents';
 export * from './mathExercises';
 export * from './parentRepresentatives';

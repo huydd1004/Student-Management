@@ -29,7 +29,6 @@ import { compareVietnameseNames } from '../../utils/vietnameseName';
 import { firestorePaths } from './paths';
 
 export interface CreateStudentInput {
-  studentCode: string;
   fullName: string;
   dateOfBirth?: PartialLocalDate;
   gender: StudentGender;
@@ -53,6 +52,11 @@ export interface ImportStudentsResult {
   updated: number;
 }
 
+type StudentIdentitySource = Pick<
+  CreateStudentInput,
+  'fullName' | 'dateOfBirth' | 'guardian'
+>;
+
 function normalizeSearchText(value: string) {
   return value
     .normalize('NFD')
@@ -60,6 +64,18 @@ function normalizeSearchText(value: string) {
     .replace(/[đĐ]/g, 'd')
     .toLowerCase()
     .trim();
+}
+
+function normalizePhoneNumber(value?: string) {
+  return value?.replace(/\D/g, '') ?? '';
+}
+
+function createImportIdentity(student: StudentIdentitySource) {
+  return [
+    normalizeSearchText(student.fullName),
+    student.dateOfBirth ?? '',
+    normalizePhoneNumber(student.guardian?.phoneNumber),
+  ].join('|');
 }
 
 export async function createStudent(
@@ -72,11 +88,8 @@ export async function createStudent(
   const studentReference = doc(
     collection(db, studentsPath),
   );
-  const studentCode = input.studentCode.trim()
-    || `HS-${studentReference.id.slice(0, 8).toUpperCase()}`;
 
   const studentData = {
-    studentCode,
     fullName: input.fullName.trim(),
     normalizedName: normalizeSearchText(input.fullName),
     gender: input.gender,
@@ -167,7 +180,6 @@ export async function updateStudent(
     );
 
     await updateDoc(studentReference, {
-        studentCode: input.studentCode.trim(),
         fullName: input.fullName.trim(),
         normalizedName: normalizeSearchText(input.fullName),
         gender: input.gender,
@@ -260,28 +272,91 @@ export async function importStudents(
     firestorePaths.students(CLASSROOM_ID),
   );
   const currentStudents = await getDocs(studentsCollection);
-  const studentReferencesByCode = new Map(
-    currentStudents.docs.map((studentSnapshot) => [
-      normalizeSearchText(
-        String(studentSnapshot.data().studentCode ?? ''),
-      ),
-      studentSnapshot.ref,
-    ]),
+  const currentStudentEntries = currentStudents.docs.map(
+    (studentSnapshot) => ({
+      data: studentSnapshot.data() as StudentDocument,
+      reference: studentSnapshot.ref,
+    }),
   );
+  const entriesByIdentity = new Map<
+    string,
+    typeof currentStudentEntries
+  >();
+  const entriesByName = new Map<
+    string,
+    typeof currentStudentEntries
+  >();
+
+  currentStudentEntries.forEach((entry) => {
+    const identity = createImportIdentity(entry.data);
+    const normalizedName = normalizeSearchText(entry.data.fullName);
+
+    entriesByIdentity.set(identity, [
+      ...(entriesByIdentity.get(identity) ?? []),
+      entry,
+    ]);
+    entriesByName.set(normalizedName, [
+      ...(entriesByName.get(normalizedName) ?? []),
+      entry,
+    ]);
+  });
+
+  const importedNameCounts = new Map<string, number>();
+
+  inputs.forEach((input) => {
+    const normalizedName = normalizeSearchText(input.fullName);
+    importedNameCounts.set(
+      normalizedName,
+      (importedNameCounts.get(normalizedName) ?? 0) + 1,
+    );
+  });
+
+  const importPlan = inputs.map((input) => {
+    const normalizedName = normalizeSearchText(input.fullName);
+    const identityMatches =
+      entriesByIdentity.get(createImportIdentity(input)) ?? [];
+    const nameMatches = entriesByName.get(normalizedName) ?? [];
+
+    if (identityMatches.length === 1) {
+      return {
+        input,
+        existingReference: identityMatches[0].reference,
+      };
+    }
+
+    if (identityMatches.length > 1) {
+      throw new Error(
+        `Không thể xác định hồ sơ “${input.fullName}” vì có nhiều học sinh trùng tên, ngày sinh và số điện thoại. Vui lòng chỉnh sửa trực tiếp trên website.`,
+      );
+    }
+
+    if (
+      importedNameCounts.get(normalizedName) === 1 &&
+      nameMatches.length === 1
+    ) {
+      return {
+        input,
+        existingReference: nameMatches[0].reference,
+      };
+    }
+
+    if (nameMatches.length > 0) {
+      throw new Error(
+        `Không thể xác định hồ sơ “${input.fullName}” vì có nhiều học sinh trùng tên. Hãy bổ sung ngày sinh hoặc số điện thoại người giám hộ để phân biệt.`,
+      );
+    }
+
+    return { input, existingReference: null };
+  });
 
   let created = 0;
   let updated = 0;
 
-  for (let start = 0; start < inputs.length; start += 450) {
+  for (let start = 0; start < importPlan.length; start += 450) {
     const batch = writeBatch(db);
-    const chunk = inputs.slice(start, start + 450);
+    const chunk = importPlan.slice(start, start + 450);
 
-    chunk.forEach((input) => {
-      const normalizedCode = normalizeSearchText(
-        input.studentCode,
-      );
-      const existingReference =
-        studentReferencesByCode.get(normalizedCode);
+    chunk.forEach(({ input, existingReference }) => {
       const guardian = input.guardian
         ? {
             fullName: input.guardian.fullName.trim(),
@@ -301,7 +376,6 @@ export async function importStudents(
 
       if (existingReference) {
         batch.update(existingReference, {
-          studentCode: input.studentCode.trim(),
           fullName: input.fullName.trim(),
           normalizedName: normalizeSearchText(input.fullName),
           gender: input.gender,
@@ -331,7 +405,6 @@ export async function importStudents(
       const newReference = doc(studentsCollection);
 
       batch.set(newReference, {
-        studentCode: input.studentCode.trim(),
         fullName: input.fullName.trim(),
         normalizedName: normalizeSearchText(input.fullName),
         gender: input.gender,
@@ -372,7 +445,6 @@ export async function importStudents(
         updatedBy: actorId,
       });
 
-      studentReferencesByCode.set(normalizedCode, newReference);
       created += 1;
     });
 
@@ -380,6 +452,42 @@ export async function importStudents(
   }
 
   return { created, updated };
+}
+
+async function removeLegacyStudentCodeField(
+  collectionPath: string,
+) {
+  const snapshot = await getDocs(collection(db, collectionPath));
+  const references = snapshot.docs
+    .filter((documentSnapshot) =>
+      Object.prototype.hasOwnProperty.call(
+        documentSnapshot.data(),
+        'studentCode',
+      ),
+    )
+    .map((documentSnapshot) => documentSnapshot.ref);
+
+  for (let start = 0; start < references.length; start += 450) {
+    const batch = writeBatch(db);
+
+    references.slice(start, start + 450).forEach((reference) => {
+      batch.update(reference, { studentCode: deleteField() });
+    });
+
+    await batch.commit();
+  }
+}
+
+export async function removeLegacyStudentCodes() {
+  await removeLegacyStudentCodeField(
+    firestorePaths.students(CLASSROOM_ID),
+  );
+  await removeLegacyStudentCodeField(
+    firestorePaths.attendanceIncidents(CLASSROOM_ID),
+  );
+  await removeLegacyStudentCodeField(
+    firestorePaths.lessonCheckCalls(CLASSROOM_ID),
+  );
 }
 
 export function subscribeToStudents(

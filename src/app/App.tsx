@@ -19,6 +19,12 @@ const AiAssistantPage = lazy(async () => {
   return { default: pageModule.AiAssistantPage }
 })
 
+const CalendarPage = lazy(async () => {
+  const pageModule = await import('../pages/CalendarPage')
+
+  return { default: pageModule.CalendarPage }
+})
+
 function PageLoadingState() {
   return (
     <div className="grid min-h-[24rem] place-items-center p-6">
@@ -69,6 +75,15 @@ if (accessStatus === 'unauthorized' || accessStatus === 'error') {
         />
 
         <Route path="dashboard" element={<DashboardPage />} />
+
+        <Route
+          path="calendar"
+          element={
+            <Suspense fallback={<PageLoadingState />}>
+              <CalendarPage />
+            </Suspense>
+          }
+        />
 
         <Route
             path="students"

@@ -29,7 +29,6 @@ export interface AttendanceRecordDocument extends AuditFields {
 
 export interface AttendanceIncidentDocument extends AuditFields {
   studentId: EntityId;
-  studentCode: string;
   studentName: string;
   attendanceDate: LocalDate;
   period: AttendancePeriod;

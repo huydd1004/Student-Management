@@ -3,6 +3,7 @@ import { Menu } from 'lucide-react'
 import { Outlet } from 'react-router'
 import { CLASSROOM_CONFIG } from '../../config/classroom'
 import { ThemeToggle } from '../theme/ThemeToggle'
+import { NotificationCenter } from '../notifications/NotificationCenter'
 import { AppSidebar } from './AppSidebar'
 
 export function AppLayout() {
@@ -77,7 +78,10 @@ export function AppLayout() {
             </div>
           </div>
 
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <NotificationCenter />
+            <ThemeToggle />
+          </div>
         </header>
 
         <Outlet />

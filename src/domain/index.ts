@@ -1,4 +1,5 @@
 export * from './activity-log';
+export * from './calendar-event';
 export * from './attendance';
 export * from './classroom';
 export * from './chat-message';

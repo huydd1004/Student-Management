@@ -20,7 +20,6 @@ import type {
 
 const EXCEL_HEADERS = [
   'STT',
-  'Mã học sinh',
   'Họ và tên',
   'Ngày sinh',
   'Giới tính',
@@ -66,7 +65,6 @@ const statusLabels: Record<StudentStatus, string> = {
 
 const excelColumns = [
   { width: 7 },
-  { width: 16 },
   { width: 26 },
   { width: 14 },
   { width: 14 },
@@ -256,7 +254,6 @@ export async function exportStudentsToExcel(
     EXCEL_HEADERS.map(createHeaderCell),
     ...students.map((student, index): Row => [
       createDataCell(index + 1, 'center', '0'),
-      createDataCell(student.studentCode, 'left', '@'),
       createDataCell(student.fullName),
       createBirthDateCell(student.dateOfBirth),
       createDataCell(genderLabels[student.gender], 'center'),
@@ -301,7 +298,7 @@ export async function exportStudentsToExcel(
       columns: excelColumns,
       dateFormat: 'dd/mm/yyyy',
       stickyRowsCount: 4,
-      stickyColumnsCount: 3,
+      stickyColumnsCount: 2,
       showGridLines: false,
       orientation: 'landscape',
       zoomScale: 0.9,
@@ -368,19 +365,17 @@ export async function parseStudentsFromExcel(
     .slice(0, 15)
     .findIndex(
       (row) =>
-        findColumnIndex(row, ['Mã học sinh', 'Mã HS']) >= 0 &&
         findColumnIndex(row, ['Họ và tên', 'Họ tên']) >= 0,
     )
 
   if (headerRowIndex < 0) {
     throw new Error(
-      'Không tìm thấy hai cột bắt buộc “Mã học sinh” và “Họ và tên”.',
+      'Không tìm thấy cột bắt buộc “Họ và tên”.',
     )
   }
 
   const headers = rows[headerRowIndex]
   const column = {
-    studentCode: findColumnIndex(headers, ['Mã học sinh', 'Mã HS']),
     fullName: findColumnIndex(headers, ['Họ và tên', 'Họ tên']),
     dateOfBirth: findColumnIndex(headers, ['Ngày sinh']),
     gender: findColumnIndex(headers, ['Giới tính']),
@@ -427,34 +422,23 @@ export async function parseStudentsFromExcel(
   }
 
   const errors: string[] = []
-  const seenStudentCodes = new Set<string>()
+  const seenStudentIdentities = new Set<string>()
   const students: CreateStudentInput[] = []
 
   for (let index = headerRowIndex + 1; index < rows.length; index += 1) {
     const row = rows[index]
     const rowNumber = index + 1
-    const studentCode = readCell(row[column.studentCode])
     const fullName = readCell(row[column.fullName])
+    const hasAnyValue = row.some((value) => readCell(value) !== '')
 
-    if (!studentCode && !fullName) continue
+    if (!hasAnyValue) continue
 
-    if (!studentCode || !fullName) {
+    if (!fullName) {
       errors.push(
-        `Dòng ${rowNumber}: phải có đủ Mã học sinh và Họ và tên.`,
+        `Dòng ${rowNumber}: Họ và tên không được để trống.`,
       )
       continue
     }
-
-    const normalizedStudentCode = normalizeText(studentCode)
-
-    if (seenStudentCodes.has(normalizedStudentCode)) {
-      errors.push(
-        `Dòng ${rowNumber}: mã học sinh “${studentCode}” bị trùng trong tệp.`,
-      )
-      continue
-    }
-
-    seenStudentCodes.add(normalizedStudentCode)
 
     const gender = parseMappedValue<StudentGender>(
       row[column.gender],
@@ -545,9 +529,22 @@ export async function parseStudentsFromExcel(
         secondaryGuardianRelationship ||
         secondaryGuardianPhone,
     )
+    const studentIdentity = [
+      normalizeText(fullName),
+      dateOfBirth ?? '',
+      guardianPhone.replace(/\D/g, ''),
+    ].join('|')
+
+    if (seenStudentIdentities.has(studentIdentity)) {
+      errors.push(
+        `Dòng ${rowNumber}: học sinh “${fullName}” bị trùng tên, ngày sinh và số điện thoại trong tệp.`,
+      )
+      continue
+    }
+
+    seenStudentIdentities.add(studentIdentity)
 
     students.push({
-      studentCode,
       fullName,
       gender,
       status,
